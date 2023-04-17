@@ -17,7 +17,7 @@ class Unit:
     
         self.combat_strength = combat_strength
       
-        self.hp = 100
+        self.hp = 50
 
 
         self.selected = False

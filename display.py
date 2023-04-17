@@ -69,11 +69,28 @@ class Display:
 
                 
                 self.screen.blit(unit.image, (unit_hex.x - unit.image.get_width() / 2, unit_hex.y - unit.image.get_height() / 2))
+                
+                hp_offset = 15
+                hp_length = 16
+                hp_thickness = 5
+                
+                # pygame.draw.rect(self.screen, (240,240,240), (unit_hex.x - hp_length / 2, unit_hex.y - hp_offset, hp_length, 0))
+                pygame.draw.rect(
+                    self.screen,
+                    (255,0,0),
+                    (unit_hex.x - hp_length / 2, unit_hex.y - hp_offset, hp_length * (1 - unit.hp / 100), hp_thickness),
+                    )
+                pygame.draw.rect(
+                    self.screen,
+                    (0,0,0),
+                    (unit_hex.x - hp_length / 2, unit_hex.y - hp_offset, hp_length, hp_thickness),
+                    width=1)
+            
 
         pygame.display.update()
 
     def _update_paths(self, paths, hexagon_grid):
-        
+
         for path in paths:
             for i, (path_r, path_c) in enumerate(path):
                 radius = 8 if i == 0 else 5
