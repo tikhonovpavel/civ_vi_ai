@@ -16,8 +16,10 @@ class UnitCategories:
 
 
 class Unit:
-    def __init__(self, r, c, category, image_path, mp_base, ranged_strength_base, range_radius_base,
+    def __init__(self, name, r, c, category, image_path, mp_base, ranged_strength_base, range_radius_base,
                  combat_strength_base, modifiers=None) -> None:
+
+        self.name = name
 
         self.r = r
         self.c = c
@@ -34,19 +36,20 @@ class Unit:
         self._range_radius = range_radius_base
     
         self._combat_strength_base = combat_strength_base
-      
+
         self.hp = random.randint(1, 100)
         self.mp = mp_base
 
         self.modifiers = modifiers
 
-
-        self.selected = False
+        self.is_selected = False
 
         self.state = UnitState.DEFAULT
 
-        self.moving_to = (None, None)
+        # self.moving_to = (None, None)
+        self.path = []
 
+        # self.allowed_hexes = None
 
     def calc_combat_strength(self, ):
         return self._combat_strength_base  # + modifiers
@@ -55,10 +58,10 @@ class Unit:
         ...#.blit(carImg, (x,y))
 
 class Units:
-    Tank = lambda r, c: Unit(r, c, category=UnitCategories.MILITARY, image_path='assets/units/tank.png',
+    Tank = lambda r, c: Unit('tank', r, c, category=UnitCategories.MILITARY, image_path='assets/units/tank.png',
                              mp_base=4,
                              ranged_strength_base=0, range_radius_base=0, combat_strength_base=50)
     
-    Artillery = lambda r, c: Unit(r, c, category=UnitCategories.MILITARY, image_path='assets/units/artillery.png',
+    Artillery = lambda r, c: Unit('artillery', r, c, category=UnitCategories.MILITARY, image_path='assets/units/artillery.png',
                                   mp_base=3,
                                   ranged_strength_base=70, range_radius_base=2, combat_strength_base=15)
