@@ -55,24 +55,24 @@ class HexagonGrid:
 
     def get_neighbours_grid_coords(self, r, c):
         result = []
-        print(f'for {(r, c)} neighbours are:')
+        # print(f'for {(r, c)} neighbours are:')
         if r % 2 == 0:
             result = [(r-1,c-1), (r+1,c-1), (r-2,c), (r+2,c), (r-1,c), (r+1,c)]
         else:
             result = [(r-2,c), (r-1,c), (r+1,c), (r+2,c), (r-1,c+1), (r+1,c+1)]
 
-        print(result)
+        # print(result)
         for i in range(len(result)):
             res_r, res_c = result[i]
 
             result[i] = res_r % self.n_rows, res_c % self.n_columns
 
-        print(result)
-        print()
+        # print(result)
+        # print()
 
         return result
 
-    def get_hexagon_grid_coords(self, x, y):
+    def get_grid_coords(self, x, y):
         min_dist, min_r, min_c = math.inf, None, None
 
         for r, row in enumerate(self.hexagons):
