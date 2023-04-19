@@ -16,10 +16,12 @@ class UnitCategories:
 
 
 class Unit:
-    def __init__(self, name, r, c, category, image_path, mp_base, ranged_strength_base, range_radius_base,
+    def __init__(self, name, player, r, c, category, image_path, mp_base, ranged_strength_base, range_radius_base,
                  combat_strength_base, modifiers=None) -> None:
 
         self.name = name
+
+        self.player = player
 
         self.r = r
         self.c = c
@@ -37,7 +39,7 @@ class Unit:
     
         self._combat_strength_base = combat_strength_base
 
-        self.hp = random.randint(1, 100)
+        self.hp = random.randint(50, 100)
         self.mp = mp_base
 
         self.modifiers = modifiers
@@ -54,14 +56,13 @@ class Unit:
     def calc_combat_strength(self, ):
         return self._combat_strength_base  # + modifiers
 
-    def update():
-        ...#.blit(carImg, (x,y))
 
 class Units:
-    Tank = lambda r, c: Unit('tank', r, c, category=UnitCategories.MILITARY, image_path='assets/units/tank.png',
-                             mp_base=4,
-                             ranged_strength_base=0, range_radius_base=0, combat_strength_base=50)
-    
-    Artillery = lambda r, c: Unit('artillery', r, c, category=UnitCategories.MILITARY, image_path='assets/units/artillery.png',
-                                  mp_base=3,
-                                  ranged_strength_base=70, range_radius_base=2, combat_strength_base=15)
+    Tank = lambda player, r, c: Unit('tank', player, r, c,
+                                     category=UnitCategories.MILITARY, image_path='assets/units/tank.png', mp_base=4,
+                                     ranged_strength_base=0, range_radius_base=0, combat_strength_base=50)
+
+    Artillery = lambda player, r, c: Unit('artillery', player, r, c,
+                                          category=UnitCategories.MILITARY, image_path='assets/units/artillery.png',
+                                          mp_base=3, ranged_strength_base=70, range_radius_base=2,
+                                          combat_strength_base=15)
