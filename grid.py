@@ -27,7 +27,8 @@ class Tile:
         self.x = x
         self.y = y
 
-        self.terrain = random.choice([TerrainTypes.PLAINS, TerrainTypes.HILLS, TerrainTypes.FOREST])
+        self.terrain = random.choices([TerrainTypes.PLAINS, TerrainTypes.HILLS, TerrainTypes.FOREST],
+                                      [0.5, 0.25, 0.25], k=1)[0]
         
         self.points = []
         
@@ -67,8 +68,10 @@ class Map:
             for c, _ in enumerate(row):
                 for neighbour in self.get_neighbours_grid_coords(r, c):
                     self._graph.add_edge((r, c), neighbour,
-                                         terrain=self.tiles[r][c].terrain,
-                                         cost=self.tiles[r][c].terrain.cost)
+                                         # terrain=self.tiles[r][c].terrain,
+                                         cost=self.tiles[neighbour[0]][neighbour[1]].terrain.cost,
+                                         # cost=self.tiles[r][c].terrain.cost
+                                        )
 
     def get(self, r, c):
         return self.tiles[r][c]
@@ -76,8 +79,11 @@ class Map:
     def set_data(self, r, c, key, value):
         self._graph.nodes[r, c][key] = value
 
-    def get_data(self, r, c):
+    def get_data_tile(self, r, c):
         return self._graph.nodes[r, c]
+
+    def get_data_edge(self, tile1_coord, tile2_coord):
+        return self._graph.edges[tile1_coord, tile2_coord]
 
     def get_neighbours_grid_coords(self, r, c):
         result = []

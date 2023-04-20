@@ -96,7 +96,7 @@ class Game:
 
     def move_unit(self, unit, new_r, new_c):
         # assert player in self.players
-        assert self.map.get_data(unit.r, unit.c)[DATA_UNIT_ATTR] == unit
+        assert self.map.get_data_tile(unit.r, unit.c)[DATA_UNIT_ATTR] == unit
 
         self.map.set_data(unit.r, unit.c, DATA_UNIT_ATTR, None)
         self.map.set_data(new_r, new_c, DATA_UNIT_ATTR, unit)
@@ -180,10 +180,17 @@ class Game:
         for enemy in enemies:
             for enemy_unit in enemy.units:
                 adj_nodes = unit_allowed_hexes.adj[enemy_unit.r, enemy_unit.c].keys()
-                disallowed_nodes = [x for x in adj_nodes
-                                    if unit_allowed_hexes.nodes[x][DATA_UNIT_ATTR] is not None
-                                    and x != (unit_selected.r, unit_selected.c)]
+
+                if enemy_unit.r == r and enemy_unit.c == c:
+                    disallowed_nodes = [x for x in adj_nodes
+                                        if unit_allowed_hexes.nodes[x][DATA_UNIT_ATTR] is not None
+                                        if x != (unit_selected.r, unit_selected.c)]
+                else:
+                    disallowed_nodes = adj_nodes
+
+
                 disallowed_edges.extend([(x, (enemy_unit.r, enemy_unit.c)) for x in disallowed_nodes])
+
 
         for frm, to in disallowed_edges:
 
@@ -192,6 +199,7 @@ class Game:
             # unit_allowed_hexes.remove_edge(to, frm)
         # print()
 
+        # print(disallowed_edges)
         # [rc for rc, d in self.hexagon_grid._graph.nodes.data() if d['unit'] != None and d['unit']]
 
         frm = (unit_selected.r, unit_selected.c)
