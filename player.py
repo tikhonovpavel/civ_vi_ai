@@ -1,3 +1,6 @@
+import pygame
+
+
 class Player:
 
     def __init__(self, nation) -> None:
@@ -8,8 +11,8 @@ class Player:
         self.enemy_unit = None
         # self.ready_to_attack_hex = (None, None)
 
-    def add_unit(self, unit_type, r, c):
-        unit = unit_type(self, r, c)
+    def add_unit(self, unit_type, r, c, tile):
+        unit = unit_type(self, r, c, tile)
         self.units.append(unit)
 
         return unit

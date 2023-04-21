@@ -22,6 +22,7 @@ class TerrainTypes:
     # WATER_OCEAN =
 
 
+
 class Tile:
     def __init__(self, x, y) -> None:
         self.x = x
@@ -41,6 +42,11 @@ class Tile:
         
 
 class Map:
+    class HexTile:
+        def __init__(self, hex, tile):
+            self.hex = hex
+            self.tile = tile
+
     def __init__(self, rows, columns, offset_x=50, offset_y=50) -> None:
 
         self.n_rows = rows
@@ -74,13 +80,10 @@ class Map:
                                         )
 
     def get(self, r, c):
-        return self.tiles[r][c]
+        return Map.HexTile(self.tiles[r][c], self._graph.nodes[r, c])
 
     def set_data(self, r, c, key, value):
         self._graph.nodes[r, c][key] = value
-
-    def get_data_tile(self, r, c):
-        return self._graph.nodes[r, c]
 
     def get_data_edge(self, tile1_coord, tile2_coord):
         return self._graph.edges[tile1_coord, tile2_coord]
