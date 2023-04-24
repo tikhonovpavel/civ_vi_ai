@@ -26,37 +26,18 @@ class Diplomacy:
 
         self._players = {p.nation: p for p in players}
 
-        for player in players:
-            self._diplomacy_graph.add_node(player.nation)
+        for nation in self._players:
+            self._diplomacy_graph.add_node(nation)
 
     def set_relation(self, player1, player2, relation):
         self._diplomacy_graph.add_edge(player1.nation, player2.nation, weight=relation)
 
     def is_enemies(self, player1, player2):
-        return bool(self._diplomacy_graph.get_edge_data(player1.nation, player2.nation)['weight'])
+        return bool(self._diplomacy_graph.get_edge_data(player1.nation, player2.nation)['weight'] == Diplomacy.WAR)
 
     def get_enemies(self, player):
         edges = self._diplomacy_graph.edges(player.nation, data=True)
         return [self._players[enemy] for _, enemy, d in edges if d['weight'] == Diplomacy.WAR]
-
-
-# class Button:
-#     def __init__(self, x, y, width, height, color, hover_color, text):
-#         self.rect = pygame.Rect(x, y, width, height)
-#         self.color = color
-#         self.hover_color = hover_color
-#
-#         self.text_rect = self.text.get_rect(center=self.rect.center)
-#
-#     def draw(self, surface):
-#         pygame.draw.rect(surface, self.color, self.rect)
-#         surface.blit(self.text, self.text_rect)
-#
-#     def handle_event(self, event):
-#         if event.type == pygame.MOUSEBUTTONDOWN:
-#             if self.rect.collidepoint(event.pos):
-#                 return True
-#         return False
 
 
 class Game:
@@ -77,6 +58,7 @@ class Game:
         self.add_unit(player1, Units.Artillery, 10, 2)
         self.add_unit(player1, Units.Artillery, 10, 4)
 
+        self.add_unit(player2, Units.Tank, 15, 4)
         self.add_unit(player2, Units.Tank, 5, 11)
         self.add_unit(player2, Units.Tank, 8, 12)
         self.add_unit(player2, Units.Tank, 14, 12)
@@ -92,6 +74,8 @@ class Game:
         for i in range(len(self.players)):
             for j in range(i + 1, len(self.players)):
                 self.diplomacy.set_relation(player1, player2, Diplomacy.WAR)
+        for player in self.players:
+            self.diplomacy.set_relation(player, player, Diplomacy.ALLIES)
 
         self.clock = clock
 
@@ -99,7 +83,17 @@ class Game:
         self.update()  # self.players, self.hexagon_grid, self. paths)
 
     def next_move(self):
-        pass
+        for player in self.players:
+            for unit in player.units:
+                unit.move(self)
+
+        for player in self.players:
+            for unit in player.units:
+                unit.mp = unit.mp_base
+                unit.can_attack = True
+                unit.is_selected = False
+
+        self.update()
 
     def mouse_motion(self, event):
         x, y = event.pos
@@ -126,19 +120,7 @@ class Game:
 
         return unit
 
-    def move_unit(self, unit, new_r, new_c):
-        # assert player in self.players
-        assert self.map.get(unit.r, unit.c).tile[DATA_UNIT_ATTR] == unit
 
-        self.map.set_data(unit.r, unit.c, DATA_UNIT_ATTR, None)
-        self.map.set_data(new_r, new_c, DATA_UNIT_ATTR, unit)
-
-        unit.r = new_r
-        unit.c = new_c
-
-        # print('Non empty hexes')
-        # pprint.pprint([rc for rc, data in self.hexagon_grid._graph.nodes.data() if data['unit'] != None])
-        # print()
 
     def is_enemy(self, other_player):
         return bool(self.diplomacy.is_enemies(self.get_current_player(), other_player))
@@ -173,10 +155,11 @@ class Game:
         mouse_x, mouse_y = event.pos
 
         if self.next_move_button.rect.collidepoint(event.pos):
-            self.next_move_button.state = ButtonStates.PRESSED
-
-            self.next_move_button.draw(self.display.screen, self, self.display.text_module)
-            pygame.display.update()
+            self.next_move_button.click_function()
+            # self.next_move_button.state = ButtonStates.PRESSED
+            #
+            # self.next_move_button.draw(self.display.screen, self, self.display.text_module)
+            # pygame.display.update()
 
         self.get_current_player().no_attack()
 
@@ -188,7 +171,7 @@ class Game:
         for unit in self.get_current_player().units:
             unit.is_selected = unit.r == r and unit.c == c
 
-        self.update()  # self.players, self.hexagon_grid, self. paths)
+        self.update()
 
     @profile
     def right_button_pressed(self, mouse_x, mouse_y):
@@ -214,7 +197,11 @@ class Game:
         if len(enemies_on_hex) > 0:
             # print('hoba')
             current_player.set_enemy(*enemies_on_hex[0])
-            # return
+
+            # but if it cannot attack - exit:
+            if not unit_selected.can_attack:
+                unit_selected.path = []
+                return
 
         disallowed_edges = []
         unit_allowed_hexes = self.map._graph.copy()
@@ -251,6 +238,10 @@ class Game:
 
         self.update()
 
+    # def attack(self, enemy_unit):
+    #
+    #     return result
+
     @profile
     def right_button_released(self, mouse_x, mouse_y):
         current_player = self.get_current_player()
@@ -268,70 +259,31 @@ class Game:
         if len(self.get_units_on_hex(r, c, player=current_player)) > 0:  # TODO
             return
 
-        enemy_player, enemy_unit = current_player.get_enemy()
+        # enemy_player, enemy_unit = current_player.get_enemy()
 
-        if len(unit_selected.path) != 0 and (r, c) == unit_selected.path[-1]:  # confirmation of the move
+        if not (len(unit_selected.path) != 0 and (r, c) == unit_selected.path[-1]):
+            return
 
-            # if there is an enemy - attack:
-            if enemy_player is not None:
-                enemy_unit_damage = self.compute_combat_damage(unit_selected, enemy_unit)
-                unit_selected_damage = self.compute_combat_damage(enemy_unit, unit_selected)
+        # confirmation of the move
+        unit_selected.move(self)
 
-                print(f"{current_player.nation}'s {unit_selected.name} hp: {unit_selected.hp}, damage: {unit_selected_damage}")
-                print(f"{enemy_player.nation}'s {unit_selected.name} hp: {enemy_unit.hp}, damage: {enemy_unit_damage}")
-                print()
+        return
 
-                unit_selected_r, unit_selected_c = unit_selected.r, unit_selected.c
-                enemy_unit_r, enemy_unit_c = enemy_unit.r, enemy_unit.c
 
-                if unit_selected.hp - unit_selected_damage <= 0:
-                    current_player.units.remove(unit_selected)
-                    enemy_unit.hp = max(1, enemy_unit.hp - enemy_unit_damage)
-
-                    # self.display.show_damage_text('')
-                    # self.display.update_texts()
-                elif enemy_unit.hp - enemy_unit_damage <= 0:
-                    enemy_player.units.remove(enemy_unit)  # del enemy_unit
-                    unit_selected.hp -= unit_selected_damage
-
-                    self.move_unit(unit_selected, enemy_unit.r, enemy_unit.c)
-
-                    # unit_selected.r, unit_selected.c = enemy_unit.r, enemy_unit.c  # or just r and c
-
-                else:
-                    unit_selected.hp -= unit_selected_damage
-                    enemy_unit.hp -= enemy_unit_damage
-
-                    self.move_unit(unit_selected, *unit_selected.path[-2])
-                    # unit_selected.r, unit_selected.c = unit_selected.path[-2]
-
-                    # unit_selected.selected = False
-
-                self.display.show_damage_text(f'-{min(100, int(unit_selected_damage))}', unit_selected_r, unit_selected_c)
-                self.display.show_damage_text(f'-{min(100, int(enemy_unit_damage))}', enemy_unit_r, enemy_unit_c)
-
-            # if there is no enemy - just move:
-            else:
-                self.move_unit(unit_selected, r, c)
-                # unit_selected.r = r
-                # unit_selected.c = c
-
-            unit_selected.selected = False
-            unit_selected.path = []
-        # else:  # create a path to the hex
+        # if enemy_player is not None:  # if there is an enemy - attack:
         #
+        # # if there is no enemy - just move:
+        # else:
+        #     self.move_unit(unit_selected, r, c)
+        #     # unit_selected.r = r
+        #     # unit_selected.c = c
         #
-        #     unit_selected.path = self.hexagon_grid.get_shortest_path((unit_selected.r, unit_selected.c), (r, c))
-
-        self.update()  # self.players, self.hexagon_grid, self.paths)
+        # unit_selected.selected = False
+        # unit_selected.path = []
+        #
+        # self.update()
 
     # def set_unit_moving_to(unit, dest_r, dest_c):
     #     unit.state = UnitState.MOVING
     #     unit.set_unit_moving_to(dest_r, dest_c)
 
-    @staticmethod
-    def compute_combat_damage(unit1, unit2):
-        diff = unit1.calc_combat_strength() - unit2.calc_combat_strength()
-
-        return random.uniform(0.8, 1.2) * 30 * math.exp(diff / 25)
-        # return 30 * math.exp(diff / 25 * random.uniform(0.75, 1.25))

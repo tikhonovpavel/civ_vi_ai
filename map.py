@@ -14,7 +14,7 @@ class TerrainType:
 class TerrainTypes:
     PLAINS = TerrainType('assets/tiles/plains.png', cost=1)
     HILLS = TerrainType('assets/tiles/hills.png', cost=2)
-    FOREST = TerrainType('assets/tiles/forest.png', cost=5)
+    FOREST = TerrainType('assets/tiles/forest.png', cost=2)
     # SNOW =
     # TUNDRA =
     # MOUNTAIN =

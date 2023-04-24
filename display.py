@@ -95,7 +95,7 @@ class Display:
         self._update_paths()
         self._update_ui()
 
-        # self._print_grid_coords()
+        self._print_grid_coords()
 
         pygame.display.update()
 
@@ -128,37 +128,49 @@ class Display:
         if unit_selected is None or len(unit_selected.path) == 0:
             return
 
-        mp_used = 0
+        # mp_used = 0
+        mp_left = unit_selected.mp
         last_step_number = 0
         path_r_prev, path_c_prev = unit_selected.path[0]
+
+        indices = []
         for i, (path_r, path_c) in enumerate(unit_selected.path[1:]):
 
+            move_cost = self.game.map.get_data_edge((path_r_prev, path_c_prev), (path_r, path_c))['cost']
+
+            # print(f'Move cost from {(path_r_prev, path_c_prev)} to {(path_r, path_c)} is {move_cost}. MP left: {mp_left}')
+            if mp_left < move_cost:
+                step_number = last_step_number + 1
+                mp_left = unit_selected.mp_base
+                mp_left -= move_cost
+                indices.append(i-1)
+            else:
+                step_number = last_step_number
+                mp_left -= move_cost
+
+            # print(f'=> step={step_number}. And now MP left if {mp_left}')
+
+            # print()
+
+
+            last_step_number = step_number
+            path_r_prev, path_c_prev = path_r, path_c
+
+        for i, (path_r, path_c) in enumerate(unit_selected.path[1:]):
             path_hex = self.game.map.get(path_r, path_c).hex
 
-            move_cost = self.game.map.get_data_edge((path_r_prev, path_c_prev), (path_r, path_c))['cost']
-            mp_used += move_cost
-
-            step_number = mp_used // unit_selected.mp
-
-            if step_number > last_step_number or (i == len(unit_selected.path) - 2):
+            if i in indices or (i == len(unit_selected.path) - 2):
                 radius = 8
                 pygame.draw.circle(self.screen, (128, 0, 128), (path_hex.x, path_hex.y), radius=radius)
 
-                if (i == len(unit_selected.path) - 2):
-                    self.text_module.text_to_screen(self.screen, f'{last_step_number + 1}',
-                                                    x=path_hex.x, y=path_hex.y,
-                                                    size=25, bold=True, color=(255, 255, 255))
-
-                else:
-                    self.text_module.text_to_screen(self.screen, f'{last_step_number + 1}',
-                                                    x=path_hex.x, y=path_hex.y,
-                                                    size=25, bold=True, color=(255, 255, 255))
+                self.text_module.text_to_screen(self.screen,
+                                                f'{(indices.index(i) if i in indices else len(indices)) + 1}',
+                                                x=path_hex.x, y=path_hex.y,
+                                                size=25, bold=True, color=(255, 255, 255))
             else:
                 radius = 4
                 pygame.draw.circle(self.screen, (128, 0, 128), (path_hex.x, path_hex.y), radius=radius)
 
-            last_step_number = step_number
-            path_r_prev, path_c_prev = path_r, path_c
 
 
     def _update_ui(self):

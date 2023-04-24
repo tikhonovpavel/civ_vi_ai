@@ -32,7 +32,7 @@ class Button:
     def draw(self, screen, game, text_module):
         pygame.draw.rect(
             screen,
-            button_color,
+            self.color,
             self.rect)
         text_module.text_to_screen(screen, self.text, x=self.x + 15, y=self.y + 15, size=30)
         # if self.state == ButtonStates.DEFAULT:

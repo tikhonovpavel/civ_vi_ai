@@ -68,8 +68,10 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
 
                 if event.button == 3:
+                    ...
                     # print('rb released')
                     # game.right_button_pressed(*event.pos)
+
                     game.right_button_released(*event.pos)
 
         game.display.update_texts()
