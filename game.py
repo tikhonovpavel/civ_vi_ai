@@ -1,18 +1,22 @@
+import json
 import math
 import random
+from datetime import datetime
 
 import pygame
 from line_profiler_pycharm import profile
 
 import networkx as nx
 
+from ai import SimpleAI, DoNothingAI
+from city import City
 from display import Display
 
-from button import Button, ButtonStates
+from ui import Button, ButtonStates, Marker, UI  # , UI
 
 from map import Map
 from player import Player
-from unit import Units
+from unit import Units, UnitCategories
 
 DATA_UNIT_ATTR = 'unit'
 
@@ -46,17 +50,34 @@ class Game:
     def __init__(self, screen, clock) -> None:
         self.map = Map(30, 15)
 
-        player1 = Player('rome')
-        player2 = Player('egypt')
+        player1 = Player('Rome')
+        player2 = Player('Egypt', ai=SimpleAI(self))
 
         self.players = [player1, player2]
 
+        with open('init_state.json', 'r', encoding='utf-8') as f:
+            config = json.load(f)
+
+            for p in config:
+                for c in p['cities']:
+                    coords = set(tuple(x) for x in c['coords'])#map(tuple, c['coords'])
+
+                    assert tuple(c['center']) in coords
+
+                    city = City(c['name'], *c['center'])
+                    city.tiles_set = coords
+                    # for coord in coords:
+                    #     city.tiles_set.add(coord)
+
+                    self.get_player_by_nation(p['nation']).cities.append(city)
+
         self.add_unit(player1, Units.Tank, 15, 3)
         self.add_unit(player1, Units.Tank, 12, 4)
+        self.add_unit(player1, Units.Tank, 13, 4)
         self.add_unit(player1, Units.Tank, 12, 5)
         self.add_unit(player1, Units.Tank, 8, 3)
         self.add_unit(player1, Units.Artillery, 10, 2)
-        self.add_unit(player1, Units.Artillery, 10, 4)
+        self.add_unit(player1, Units.Artillery, 14, 4)
 
         self.add_unit(player2, Units.Tank, 15, 4)
         self.add_unit(player2, Units.Tank, 5, 11)
@@ -67,7 +88,14 @@ class Game:
 
         self._current_player_index = 0
 
-        self.next_move_button = Button('Next move', 712, 632, 150, 70, self.next_move)
+        self.next_turn_button = Button('Next move', 570, 632, 150, 70, self.next_turn)
+        self.save_state_button = Button('Save state', 800, 632, 150, 70, self.save_state)
+        self.show_moves_marker = Marker('Show moves', 780, 720)
+        self.sound_marker = Marker('Sound', 780, 720+35)
+        # self.sound_marker = Marker('Sound', 780, 720+35*2)
+
+        self.ui = UI([self.next_turn_button, self.save_state_button,
+                      self.show_moves_marker, self.sound_marker])
 
         # all vs all
         self.diplomacy = Diplomacy(self.players)
@@ -82,29 +110,64 @@ class Game:
         self.display = Display(screen, self)
         self.update()  # self.players, self.hexagon_grid, self. paths)
 
-    def next_move(self):
-        for player in self.players:
-            for unit in player.units:
-                unit.move(self)
+    def get_player_by_nation(self, nation):
+        return next(p for p in self.players if p.nation == nation)
+
+    def save_state(self):
+        result = []
 
         for player in self.players:
+            res = {}
+            res['nation'] = player.nation
+
+            res['cities'] = []
+            for city in player.cities:
+                res['cities'].append({'name': city.name,
+                                      'center': [city.center_r, city.center_c],
+                                      'coords': list(city.tiles_set)})
+
+            res['units'] = []
             for unit in player.units:
-                unit.mp = unit.mp_base
-                unit.can_attack = True
-                unit.is_selected = False
+                fields = ['name', 'r', 'c', 'category', 'sub_category',
+                          'mp', 'hp', 'image_path', 'mb_base', 'ranged_strength_base',
+                          'range_radius_base', 'combat_strength_base', 'path']
+                unit_json = {k: v for k, v in unit.__dict__.items() if k in fields}
+
+                res['units'].append(unit_json)
+
+            result.append(res)
+
+        current_datetime = datetime.now()
+        formatted_datetime = current_datetime.strftime("%Y-%m-%d %H-%M-%S")
+        json.dump(result, open(f'saves/{" vs ".join(p.nation for p in self.players)} {formatted_datetime}.json',
+                               'w', encoding='utf-8'),
+                  ensure_ascii=False, indent=2)
+
+    def next_turn(self):
+        for unit in self.get_current_player().units:
+            unit.move(self)
+            unit.gain_hps()
+
+            unit.mp = unit.mp_base
+            unit.can_attack = True
+            unit.is_selected = False
+
+        self.set_next_current_player()
 
         self.update()
+
+        # if now the player is AI, call create_paths method
+        # and move units according to the paths
+        if self.get_current_player().is_ai:
+            self.get_current_player().create_paths()
+
+
+
 
     def mouse_motion(self, event):
         x, y = event.pos
 
-        # if self.next_move_button.rect.collidepoint(event.pos):
-        #     self.next_move_button.state = ButtonStates.HOVER
-        # else:
-        #     self.next_move_button.state = ButtonStates.DEFAULT
-
-
-        self.next_move_button.draw(self.display.screen, self, self.display.text_module)
+        self.next_turn_button.draw(self.display.screen, self, self.display.text_module)
         pygame.display.update()
 
         lb, mb, rb = pygame.mouse.get_pressed()
@@ -120,13 +183,14 @@ class Game:
 
         return unit
 
-
-
     def is_enemy(self, other_player):
         return bool(self.diplomacy.is_enemies(self.get_current_player(), other_player))
 
     def get_current_player(self):
         return self.players[self._current_player_index]
+
+    def set_next_current_player(self):
+        self._current_player_index = (self._current_player_index + 1) % len(self.players)
 
     def get_selected_unit(self):
         return next((u for u in self.get_current_player().units if u.is_selected), None)
@@ -154,12 +218,7 @@ class Game:
     def left_button_released(self, event):
         mouse_x, mouse_y = event.pos
 
-        if self.next_move_button.rect.collidepoint(event.pos):
-            self.next_move_button.click_function()
-            # self.next_move_button.state = ButtonStates.PRESSED
-            #
-            # self.next_move_button.draw(self.display.screen, self, self.display.text_module)
-            # pygame.display.update()
+        self.ui.screen_click(event.pos, self.display)
 
         self.get_current_player().no_attack()
 
@@ -177,8 +236,9 @@ class Game:
     def right_button_pressed(self, mouse_x, mouse_y):
         current_player = self.get_current_player()
         current_player.no_attack()
-
         unit_selected = self.get_selected_unit()
+
+        #  =================== Exit Conditions ===================
         if unit_selected is None:
             return
 
@@ -186,22 +246,38 @@ class Game:
         if r is None:
             return
 
-        # if there is a unit of the same category on the hex - cancel
+        # there is a unit of the same category on the hex
         if len(self.get_units_on_hex(r, c, player=current_player)) > 0:  # TODO
             unit_selected.path = []
             self.update()
             return
+        # =================== End Of Exit Conditions ===================
+
+        unit_selected.ranged_target = None
+        unit_selected.path = []
 
         # if there is an enemy unit on the hex - show attack screen
         enemies_on_hex = self.get_units_on_hex(r, c, only_enemies=True)
         if len(enemies_on_hex) > 0:
-            # print('hoba')
             current_player.set_enemy(*enemies_on_hex[0])
 
             # but if it cannot attack - exit:
             if not unit_selected.can_attack:
                 unit_selected.path = []
                 return
+
+            if unit_selected.sub_category == UnitCategories.MILITARY_RANGED \
+                    and unit_selected.is_within_attack_range(self, r, c):
+                _, enemy_unit = enemies_on_hex[0]
+                unit_selected.ranged_target = enemy_unit
+                self.update()
+                return
+
+        self.set_allowed_shortest_path(unit_selected, r, c)
+        self.update()
+
+    def set_allowed_shortest_path(self, unit, to_r, to_c):
+        current_player = self.get_current_player()
 
         disallowed_edges = []
         unit_allowed_hexes = self.map._graph.copy()
@@ -210,37 +286,25 @@ class Game:
             for enemy_unit in enemy.units:
                 adj_nodes = unit_allowed_hexes.adj[enemy_unit.r, enemy_unit.c].keys()
 
-                if enemy_unit.r == r and enemy_unit.c == c:
+                if enemy_unit.r == to_r and enemy_unit.c == to_c:
                     disallowed_nodes = [x for x in adj_nodes
                                         if unit_allowed_hexes.nodes[x][DATA_UNIT_ATTR] is not None
-                                        if x != (unit_selected.r, unit_selected.c)]
+                                        if x != (unit.r, unit.c)]
                 else:
                     disallowed_nodes = adj_nodes
 
-
                 disallowed_edges.extend([(x, (enemy_unit.r, enemy_unit.c)) for x in disallowed_nodes])
 
-
         for frm, to in disallowed_edges:
-
-            # print(f'remove edge from {frm} to {to}')
             unit_allowed_hexes.remove_edge(frm, to)
-            # unit_allowed_hexes.remove_edge(to, frm)
-        # print()
 
-        # print(disallowed_edges)
-        # [rc for rc, d in self.hexagon_grid._graph.nodes.data() if d['unit'] != None and d['unit']]
+        frm = (unit.r, unit.c)
+        to = to_r, to_c
 
-        frm = (unit_selected.r, unit_selected.c)
-        to = r, c
-        # unit_selected.path = [frm] + nx.shortest_path(unit_allowed_hexes, frm, to)
-        unit_selected.path = nx.shortest_path(unit_allowed_hexes, frm, to, weight='cost')
-
-        self.update()
-
-    # def attack(self, enemy_unit):
-    #
-    #     return result
+        try:
+            unit.path = nx.shortest_path(unit_allowed_hexes, frm, to, weight='cost')
+        except nx.exception.NetworkXNoPath:
+            unit.path = []
 
     @profile
     def right_button_released(self, mouse_x, mouse_y):
@@ -254,36 +318,14 @@ class Game:
         if r is None:
             return
 
-
         # if there is a unit of the same category on the hex - cancel
         if len(self.get_units_on_hex(r, c, player=current_player)) > 0:  # TODO
             return
 
         # enemy_player, enemy_unit = current_player.get_enemy()
 
-        if not (len(unit_selected.path) != 0 and (r, c) == unit_selected.path[-1]):
-            return
-
         # confirmation of the move
-        unit_selected.move(self)
+        if (len(unit_selected.path) != 0 and (r, c) == unit_selected.path[-1]) or (unit_selected.ranged_target is not None):
+            unit_selected.move(self)
 
-        return
-
-
-        # if enemy_player is not None:  # if there is an enemy - attack:
-        #
-        # # if there is no enemy - just move:
-        # else:
-        #     self.move_unit(unit_selected, r, c)
-        #     # unit_selected.r = r
-        #     # unit_selected.c = c
-        #
-        # unit_selected.selected = False
-        # unit_selected.path = []
-        #
-        # self.update()
-
-    # def set_unit_moving_to(unit, dest_r, dest_c):
-    #     unit.state = UnitState.MOVING
-    #     unit.set_unit_moving_to(dest_r, dest_c)
-
+            return

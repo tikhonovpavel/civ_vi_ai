@@ -5,7 +5,7 @@ import networkx as nx
 import random
 
 import map
-from button import ButtonStates
+from ui import ButtonStates
 from display import Display
 from game import Game
 from map import Map
@@ -41,7 +41,7 @@ def main():
     running = True
 
     while running:
-        game.next_move_button.state = ButtonStates.DEFAULT
+        game.next_turn_button.state = ButtonStates.DEFAULT
 
         for event in pygame.event.get():
             lb, mb, rb = pygame.mouse.get_pressed()
@@ -57,9 +57,18 @@ def main():
                 if event.button == 1:  # 1 == left button
                     game.left_button_released(event)
 
-                if event.button == 2:
-                    print(event.pos)
-                    pygame.draw.circle(screen, (128, 0, 128), event.pos, radius=3)
+                if event.button == 2: # 2 == middle button
+                    tile_coord = game.map.get_grid_coords(*event.pos)
+                    print(tile_coord)
+
+                    if tile_coord not in game.players[0].cities[0].tiles_set:
+                        game.players[0].cities[0].tiles_set.add(tile_coord)
+                    else:
+                        game.players[0].cities[0].tiles_set.remove(tile_coord)
+                    game.update()
+                    # game.players
+                    # print(event.pos)
+                    # pygame.draw.circle(screen, (128, 0, 128), event.pos, radius=3)
 
                 if event.button == 3:  # 3 == right button
                     # print('rb pressed')
@@ -75,9 +84,8 @@ def main():
                     game.right_button_released(*event.pos)
 
         game.display.update_texts()
-        game.next_move_button.draw(screen, game, game.display.text_module)
+        game.next_turn_button.draw(screen, game, game.display.text_module)
         pygame.display.update()
-    # button.draw(screen)
 
     pygame.quit()
 

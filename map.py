@@ -39,7 +39,7 @@ class Tile:
             point_x = x + radius * math.cos(angle_rad)
             point_y = y + radius * math.sin(angle_rad)
             self.points.append((point_x, point_y))
-        
+
 
 class Map:
     class HexTile:
@@ -88,22 +88,23 @@ class Map:
     def get_data_edge(self, tile1_coord, tile2_coord):
         return self._graph.edges[tile1_coord, tile2_coord]
 
-    def get_neighbours_grid_coords(self, r, c):
-        result = []
-        # print(f'for {(r, c)} neighbours are:')
-        if r % 2 == 0:
-            result = [(r - 1, c - 1), (r + 1, c - 1), (r - 2, c), (r + 2, c), (r - 1, c), (r + 1, c)]
-        else:
-            result = [(r - 2, c), (r - 1, c), (r + 1, c), (r + 2, c), (r - 1, c + 1), (r + 1, c + 1)]
+    def get_distance(self, from_rc, to_rc, graph=None):
+        if graph is None:
+            graph = self._graph
 
-        # print(result)
+        return nx.shortest_path_length(graph, from_rc, to_rc)
+
+
+    def get_neighbours_grid_coords(self, r, c):
+        if r % 2 == 0:
+            result = [(r + 1, c), (r + 2, c), (r + 1, c - 1), (r - 1, c - 1), (r - 2, c), (r - 1, c)]
+        else:
+            result = [(r + 1, c + 1), (r + 2, c), (r + 1, c), (r - 1, c), (r - 2, c), (r - 1, c + 1)]
+
         for i in range(len(result)):
             res_r, res_c = result[i]
 
             result[i] = res_r % self.n_rows, res_c % self.n_columns
-
-        # print(result)
-        # print()
 
         return result
 
@@ -117,8 +118,12 @@ class Map:
                     min_dist = dist
                     min_r, min_c = r, c
         
-        return min_r, min_c 
+        return min_r, min_c
 
-    # def get_shortest_path(self, frm, to):
-    #     # return [frm] + nx.shortest_path(self._graph, frm, to)
-    #     return nx.shortest_path(self._graph, frm, to)
+    def whom_cell_is_it(self, game, r, c):
+        for player in game.players:
+            if any(city.is_cell_inside(r, c) for city in player.cities):
+                return player.nation
+
+        return None
+
