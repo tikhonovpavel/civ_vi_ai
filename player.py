@@ -23,8 +23,8 @@ class Player:
 
         self._ai.create_paths(self)
 
-    def add_unit(self, unit_type, r, c, tile):
-        unit = unit_type(self, r, c, tile)
+    def add_unit(self, unit_type, r, c):
+        unit = unit_type(self, r, c)
         self.units.append(unit)
 
         return unit

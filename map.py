@@ -28,6 +28,7 @@ class Tile:
         self.x = x
         self.y = y
 
+        # self.terrain = TerrainTypes.PLAINS
         self.terrain = random.choices([TerrainTypes.PLAINS, TerrainTypes.HILLS, TerrainTypes.FOREST],
                                       [0.5, 0.25, 0.25], k=1)[0]
         
@@ -73,6 +74,8 @@ class Map:
         for r, row in enumerate(self.tiles):
             for c, _ in enumerate(row):
                 for neighbour in self.get_neighbours_grid_coords(r, c):
+                    if neighbour is None:
+                        continue
                     self._graph.add_edge((r, c), neighbour,
                                          # terrain=self.tiles[r][c].terrain,
                                          cost=self.tiles[neighbour[0]][neighbour[1]].terrain.cost,
@@ -94,6 +97,8 @@ class Map:
 
         return nx.shortest_path_length(graph, from_rc, to_rc)
 
+    # def get_distance_in_turns(self, from_rc, to_rc, mp_left, mp, graph=None):
+
 
     def get_neighbours_grid_coords(self, r, c):
         if r % 2 == 0:
@@ -101,10 +106,9 @@ class Map:
         else:
             result = [(r + 1, c + 1), (r + 2, c), (r + 1, c), (r - 1, c), (r - 2, c), (r - 1, c + 1)]
 
-        for i in range(len(result)):
-            res_r, res_c = result[i]
-
-            result[i] = res_r % self.n_rows, res_c % self.n_columns
+        result = [(row, col) if 0 <= row < self.n_rows and 0 <= col < self.n_columns else None for row, col in result]
+        # result = [(row, col) for row, col in result if 0 <= row < self.n_rows and 0 <= col < self.n_columns]
+        # result = [(row % self.n_rows, col % self.n_columns) for row, col in result]
 
         return result
 

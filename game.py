@@ -1,6 +1,4 @@
 import json
-import math
-import random
 from datetime import datetime
 
 import pygame
@@ -12,13 +10,14 @@ from ai import SimpleAI, DoNothingAI
 from city import City
 from display import Display
 
-from ui import Button, ButtonStates, Marker, UI  # , UI
+from ui import Button, Marker, UI, Text  # , UI
 
 from map import Map
 from player import Player
 from unit import Units, UnitCategories
 
 DATA_UNIT_ATTR = 'unit'
+
 
 class Diplomacy:
     WAR = -1
@@ -51,6 +50,7 @@ class Game:
         self.map = Map(30, 15)
 
         player1 = Player('Rome')
+        # player2 = Player('Egypt', ai=DoNothingAI(self))
         player2 = Player('Egypt', ai=SimpleAI(self))
 
         self.players = [player1, player2]
@@ -64,10 +64,8 @@ class Game:
 
                     assert tuple(c['center']) in coords
 
-                    city = City(c['name'], *c['center'])
+                    city = City(c['name'], *c['center'], coords, 'assets/city_icon1.png')
                     city.tiles_set = coords
-                    # for coord in coords:
-                    #     city.tiles_set.add(coord)
 
                     self.get_player_by_nation(p['nation']).cities.append(city)
 
@@ -88,14 +86,21 @@ class Game:
 
         self._current_player_index = 0
 
-        self.next_turn_button = Button('Next move', 570, 632, 150, 70, self.next_turn)
+        self.subturn_number = 0
+        self.turn_number = 1
+
+        self.next_turn_button = Button('Next turn', 570, 632, 150, 70, self.next_turn)
         self.save_state_button = Button('Save state', 800, 632, 150, 70, self.save_state)
-        self.show_moves_marker = Marker('Show moves', 780, 720)
-        self.sound_marker = Marker('Sound', 780, 720+35)
-        # self.sound_marker = Marker('Sound', 780, 720+35*2)
+        self.quick_movement_marker = Marker('Quick movement', 770, 720, state=True, click_function=self.update)
+        self.sound_marker = Marker('Sound', 770, 720+35, state=True, click_function=self.update)
+        self.current_turn_text = Text('Turn: {turn_number}', 550, 690, 1, 1)
+        self.current_player_text = Text("({current_player}'s turn)", 550, 730, 1, 1)
 
         self.ui = UI([self.next_turn_button, self.save_state_button,
-                      self.show_moves_marker, self.sound_marker])
+                      self.quick_movement_marker, self.sound_marker, self.current_turn_text,
+                      self.current_player_text, ])
+
+        self.unit_selected_sound = pygame.mixer.Sound('assets/sounds/select_unit.ogg')
 
         # all vs all
         self.diplomacy = Diplomacy(self.players)
@@ -106,9 +111,11 @@ class Game:
             self.diplomacy.set_relation(player, player, Diplomacy.ALLIES)
 
         self.clock = clock
-
         self.display = Display(screen, self)
-        self.update()  # self.players, self.hexagon_grid, self. paths)
+
+        self.current_turn_text.update(turn_number=self.turn_number)
+        self.current_player_text.update(current_player=self.players[0].nation)
+        self.update()
 
     def get_player_by_nation(self, nation):
         return next(p for p in self.players if p.nation == nation)
@@ -144,6 +151,10 @@ class Game:
                   ensure_ascii=False, indent=2)
 
     def next_turn(self):
+        self.subturn_number += 1
+        if self.subturn_number % len(self.players) == 0:
+            self.turn_number += 1
+
         for unit in self.get_current_player().units:
             unit.move(self)
             unit.gain_hps()
@@ -154,15 +165,14 @@ class Game:
 
         self.set_next_current_player()
 
+        self.current_turn_text.update(turn_number=self.turn_number)
+        self.current_player_text.update(current_player=self.get_current_player().nation)
         self.update()
 
         # if now the player is AI, call create_paths method
         # and move units according to the paths
         if self.get_current_player().is_ai:
             self.get_current_player().create_paths()
-
-
-
 
     def mouse_motion(self, event):
         x, y = event.pos
@@ -174,11 +184,10 @@ class Game:
         if rb:
             self.right_button_pressed(*event.pos)
 
-
     def add_unit(self, player, unit_type, r, c):
         assert player in self.players
 
-        unit = player.add_unit(unit_type, r, c, self.map.get(r, c))
+        unit = player.add_unit(unit_type, r, c)
         self.map.set_data(r, c, DATA_UNIT_ATTR, unit)
 
         return unit
@@ -213,9 +222,9 @@ class Game:
         return result
 
     def update(self):
-        self.display.update_all()  # self.players, self.hexagon_grid, self.paths)
+        self.display.update_all()
 
-    def left_button_released(self, event):
+    def left_button_pressed(self, event):
         mouse_x, mouse_y = event.pos
 
         self.ui.screen_click(event.pos, self.display)
@@ -224,11 +233,18 @@ class Game:
 
         r, c = self.map.get_grid_coords(mouse_x, mouse_y)
 
+        print(f'LB pressed on ({r}, {c})')
+
         if r is None:
             return
 
         for unit in self.get_current_player().units:
-            unit.is_selected = unit.r == r and unit.c == c
+            new_status = unit.r == r and unit.c == c
+
+            if self.sound_marker.state and (new_status and not unit.is_selected):
+                self.unit_selected_sound.play()
+
+            unit.is_selected = new_status
 
         self.update()
 
@@ -243,6 +259,9 @@ class Game:
             return
 
         r, c = self.map.get_grid_coords(mouse_x, mouse_y)
+
+        print(f'RB pressed on ({r}, {c})')
+
         if r is None:
             return
 
@@ -253,7 +272,7 @@ class Game:
             return
         # =================== End Of Exit Conditions ===================
 
-        unit_selected.ranged_target = None
+        # unit_selected.ranged_target = None
         unit_selected.path = []
 
         # if there is an enemy unit on the hex - show attack screen
@@ -266,12 +285,12 @@ class Game:
                 unit_selected.path = []
                 return
 
-            if unit_selected.sub_category == UnitCategories.MILITARY_RANGED \
-                    and unit_selected.is_within_attack_range(self, r, c):
-                _, enemy_unit = enemies_on_hex[0]
-                unit_selected.ranged_target = enemy_unit
-                self.update()
-                return
+            # if unit_selected.sub_category == UnitCategories.MILITARY_RANGED \
+            #         and unit_selected.is_within_attack_range(self, r, c):
+            #     _, enemy_unit = enemies_on_hex[0]
+            #     # unit_selected.ranged_target = enemy_unit
+            #     self.update()
+            #     return
 
         self.set_allowed_shortest_path(unit_selected, r, c)
         self.update()
@@ -315,6 +334,8 @@ class Game:
             return
 
         r, c = self.map.get_grid_coords(mouse_x, mouse_y)
+        print(f'RB released on ({r}, {c})')
+
         if r is None:
             return
 
@@ -325,7 +346,7 @@ class Game:
         # enemy_player, enemy_unit = current_player.get_enemy()
 
         # confirmation of the move
-        if (len(unit_selected.path) != 0 and (r, c) == unit_selected.path[-1]) or (unit_selected.ranged_target is not None):
+        if (len(unit_selected.path) != 0 and (r, c) == unit_selected.path[-1]) or (unit_selected.get_ranged_target(self) is not None):
             unit_selected.move(self)
 
             return

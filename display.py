@@ -17,8 +17,6 @@ DEFAULT_UNIT_IMAGE_SIZE = (30, 30)
 DEFAULT_TERRAIN_IMAGE_SIZE = (40, 37)
 UI_UNIT_IMAGE_SIZE = (100, 100)
 
-DEFAULT_CITY_IMAGE_SIZE = (25, 25)
-
 pygame.font.init()
 
 
@@ -101,7 +99,7 @@ class Display:
         self.screen.fill((255, 255, 255))
 
         self._update_grid()
-        self._update_units()
+        self._update_units_and_cities()
         self._update_paths()
         self._update_ui()
 
@@ -143,33 +141,21 @@ class Display:
 
                     # borders
                     for n_index, neighbour in enumerate(self.game.map.get_neighbours_grid_coords(*tile_coord)):
-                        if self.game.map.whom_cell_is_it(self.game, *neighbour) != player.nation:
+
+                        if neighbour is None or self.game.map.whom_cell_is_it(self.game, *neighbour) != player.nation:
                             pygame.draw.line(self.screen, Nations.COLORS[player.nation],
                                              hex.points[n_index], hex.points[(n_index + 1) % 6], width=5)
 
-
-
-
-                    # alpha tiles
-                    # TODO: change to the const for each country
-                    # self._draw_polygon_alpha((0, 0, 255, 90), hex.points)
-
-                center_hex = self.game.map.get(city.center_r, city.center_c).hex
-                city_image = pygame.image.load('assets/city_icon.png')
-                city_image = pygame.transform.scale(city_image, DEFAULT_CITY_IMAGE_SIZE)
-                self.screen.blit(city_image,
-                                 (center_hex.x - DEFAULT_CITY_IMAGE_SIZE[0] / 2,
-                                  center_hex.y - DEFAULT_CITY_IMAGE_SIZE[1] / 2))
-                self.text_module.text_to_screen(self.screen, city.name,
-                                                center_hex.x, center_hex.y + 15,
-                                                size=15, color=(0, 0, 0), bold=True, align='center')
 
         for r, row in enumerate(self.game.map.tiles):
             for c, tile in enumerate(row):
                 pygame.draw.polygon(self.screen, BLACK, tile.points, 1)
 
-    def _update_units(self):
+    def _update_units_and_cities(self):
         for player in self.game.players:
+            for city in player.cities:
+                city.draw(self.screen, self.game, self.text_module)
+
             for unit in player.units:
                 unit.draw(self.screen, self.game)
 
@@ -178,11 +164,12 @@ class Display:
         if unit_selected is None:
             return
 
-        if unit_selected.ranged_target is None and len(unit_selected.path) == 0:
+        if unit_selected.get_ranged_target(self.game) is None and len(unit_selected.path) == 0:
             return
 
-        if unit_selected.ranged_target is not None:
-            unit_enemy = unit_selected.ranged_target
+        ranged_target = unit_selected.get_ranged_target(self.game)
+        if ranged_target is not None:
+            unit_enemy = ranged_target
 
             from_hex = self.game.map.get(unit_selected.r, unit_selected.c).hex
             target_hex = self.game.map.get(unit_enemy.r, unit_enemy.c).hex
@@ -226,7 +213,6 @@ class Display:
                 else:
                     radius = 4
                     pygame.draw.circle(self.screen, (128, 0, 128), (path_hex.x, path_hex.y), radius=radius)
-
 
     def _update_ui(self):
         for ui_element in self.game.ui.ui_elements:

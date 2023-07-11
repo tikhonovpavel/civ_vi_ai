@@ -1,29 +1,12 @@
 from line_profiler_pycharm import profile
-import math
+
 import pygame
-import networkx as nx
-import random
-
-import map
 from ui import ButtonStates
-from display import Display
 from game import Game
-from map import Map
-
-from unit import Units, UnitState
-from player import Player
-import pprint
-
-import datetime# import datetime
 
 # Set the dimensions of the screen
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
-
-
-# Update the screen
-# pygame.display.update()
-
 
 
 @profile
@@ -55,7 +38,7 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # 1 == left button
-                    game.left_button_released(event)
+                    game.left_button_pressed(event)
 
                 if event.button == 2: # 2 == middle button
                     tile_coord = game.map.get_grid_coords(*event.pos)
