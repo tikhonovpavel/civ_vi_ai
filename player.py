@@ -17,6 +17,10 @@ class Player:
         self.known_map = None # TODO: туман войны
         # self.ready_to_attack_hex = (None, None)
 
+    @property
+    def game_objects(self):
+        return self.units + self.cities
+
     def create_paths(self):
         if not self.is_ai:
             raise Exception('create_paths can be called only on AI players')
@@ -28,6 +32,19 @@ class Player:
         self.units.append(unit)
 
         return unit
+
+    def add_city(self, city):
+        self.cities.append(city)
+
+        return city
+
+    def destroy(self, game_object):
+        if game_object in self.units:
+            self.units.remove(game_object)
+        elif game_object in self.cities:
+            self.cities.remove(game_object)
+        else:
+            raise Exception()
 
     def set_enemy(self, player, unit):
         self.enemy_player = player

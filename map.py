@@ -1,6 +1,11 @@
 import math
+from typing import List
+
 import networkx as nx
 import random
+
+from game_object import MilitaryObject
+from sortedcontainers import SortedList
 
 radius = 20
 
@@ -43,10 +48,10 @@ class Tile:
 
 
 class Map:
-    class HexTile:
-        def __init__(self, hex, tile):
-            self.hex = hex
-            self.tile = tile
+    class Cell:
+        def __init__(self, tile, game_objects):
+            self.game_objects = game_objects
+            self.geometry = tile
 
     def __init__(self, rows, columns, offset_x=50, offset_y=50) -> None:
 
@@ -66,8 +71,11 @@ class Map:
                     row.append(Tile(3 * radius * c + offset_x, side * r + offset_y))
                 else:
                     row.append(Tile(1.5 * radius * (c * 2 + 1) + offset_x, side * r + offset_y))
-                
-                self._graph.add_node((r, c), unit=None)
+
+                from city import City
+                self._graph.add_node((r, c), game_objects=SortedList(key=lambda x: 0 if isinstance(x, City) else 1))
+                # print(self._graph[(r, c)]['game_objects'])
+                # print()
 
             self.tiles.append(row)
 
@@ -83,10 +91,17 @@ class Map:
                                         )
 
     def get(self, r, c):
-        return Map.HexTile(self.tiles[r][c], self._graph.nodes[r, c])
+        return Map.Cell(self.tiles[r][c],
+                        self._graph.nodes[r, c]['game_objects'])
 
-    def set_data(self, r, c, key, value):
-        self._graph.nodes[r, c][key] = value
+    def set(self, r, c, value: List[MilitaryObject]):
+        self._graph.nodes[r, c]['game_objects'] = value
+
+    def remove(self, r, c, game_object):
+        self.get(r, c).game_objects.remove(game_object)
+
+    # def set(self, r, c, key, value):
+    #     self._graph.nodes[r, c][key] = value
 
     def get_data_edge(self, tile1_coord, tile2_coord):
         return self._graph.edges[tile1_coord, tile2_coord]
@@ -97,9 +112,6 @@ class Map:
 
         return nx.shortest_path_length(graph, from_rc, to_rc)
 
-    # def get_distance_in_turns(self, from_rc, to_rc, mp_left, mp, graph=None):
-
-
     def get_neighbours_grid_coords(self, r, c):
         if r % 2 == 0:
             result = [(r + 1, c), (r + 2, c), (r + 1, c - 1), (r - 1, c - 1), (r - 2, c), (r - 1, c)]
@@ -107,8 +119,6 @@ class Map:
             result = [(r + 1, c + 1), (r + 2, c), (r + 1, c), (r - 1, c), (r - 2, c), (r - 1, c + 1)]
 
         result = [(row, col) if 0 <= row < self.n_rows and 0 <= col < self.n_columns else None for row, col in result]
-        # result = [(row, col) for row, col in result if 0 <= row < self.n_rows and 0 <= col < self.n_columns]
-        # result = [(row % self.n_rows, col % self.n_columns) for row, col in result]
 
         return result
 

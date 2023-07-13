@@ -88,7 +88,7 @@ class Display:
             self.start_time = datetime.now()
             self.text = text
 
-            hex = game.map.get(r, c).hex
+            hex = game.map.get(r, c).geometry
             self.x, self.y = hex.x, hex.y
 
     def show_damage_text(self, text, r, c):
@@ -137,7 +137,7 @@ class Display:
         for player in self.game.players:
             for city in player.cities:
                 for tile_coord in city.tiles_set:
-                    hex = self.game.map.get(*tile_coord).hex
+                    hex = self.game.map.get(*tile_coord).geometry
 
                     # borders
                     for n_index, neighbour in enumerate(self.game.map.get_neighbours_grid_coords(*tile_coord)):
@@ -171,8 +171,8 @@ class Display:
         if ranged_target is not None:
             unit_enemy = ranged_target
 
-            from_hex = self.game.map.get(unit_selected.r, unit_selected.c).hex
-            target_hex = self.game.map.get(unit_enemy.r, unit_enemy.c).hex
+            from_hex = self.game.map.get(unit_selected.r, unit_selected.c).geometry
+            target_hex = self.game.map.get(unit_enemy.r, unit_enemy.c).geometry
             self.draw_arrow(pygame.Vector2(from_hex.x, from_hex.y),
                             pygame.Vector2(target_hex.x, target_hex.y),
                             pygame.Color(0, 0, 0))
@@ -200,7 +200,7 @@ class Display:
                 path_r_prev, path_c_prev = path_r, path_c
 
             for i, (path_r, path_c) in enumerate(unit_selected.path[1:]):
-                path_hex = self.game.map.get(path_r, path_c).hex
+                path_hex = self.game.map.get(path_r, path_c).geometry
 
                 if i in indices or (i == len(unit_selected.path) - 2):
                     radius = 8
