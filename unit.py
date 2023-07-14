@@ -8,7 +8,7 @@ from game_object import MilitaryObject
 
 random.seed(1)
 
-from display import DEFAULT_UNIT_IMAGE_SIZE, UI_UNIT_IMAGE_SIZE
+from consts import DEFAULT_UNIT_IMAGE_SIZE, UI_UNIT_IMAGE_SIZE
 
 from typing import Tuple, List
 
@@ -144,7 +144,9 @@ class Unit(MilitaryObject):
         if enemy_unit.hp - enemy_unit_damage <= 0:
             if not isinstance(enemy_unit, City):
                 enemy_unit.player.destroy(enemy_unit)
-                game.map.set(enemy_unit.r, enemy_unit.c, [])
+
+                game.map.reset(enemy_unit.r, enemy_unit.c)
+                # game.map.set(enemy_unit.r, enemy_unit.c, [])
             else:
                 enemy_unit.hp = 0
         else:

@@ -5,17 +5,12 @@ import pygame
 
 # Define colors
 # import game
+from city import City
+from consts import DEFAULT_TERRAIN_IMAGE_SIZE, BLACK, UI_UNIT_IMAGE_SIZE
 from nations import Nations
 from ui import ButtonStates
 from map import TerrainTypes
 
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-
-# Set the size for the image
-DEFAULT_UNIT_IMAGE_SIZE = (30, 30)
-DEFAULT_TERRAIN_IMAGE_SIZE = (40, 37)
-UI_UNIT_IMAGE_SIZE = (100, 100)
 
 pygame.font.init()
 
@@ -27,10 +22,6 @@ class Image:
         self.tiles = {k.image_path: pygame.image.load(k.image_path) for k in [TerrainTypes.FOREST,
                                                                               TerrainTypes.HILLS,
                                                                               TerrainTypes.PLAINS]}
-    #
-    # image = pygame.image.load(image_path)
-    # self.image = pygame.transform.scale(image, DEFAULT_UNIT_IMAGE_SIZE)
-    # self.image_ui = pygame.transform.scale(image, UI_UNIT_IMAGE_SIZE)
 
 
 class Text:
@@ -58,9 +49,6 @@ class Text:
             # font.set_alpha(alpha)
             self._texts[text] = font.render(text, True, color)
 
-            # arr = pygame.surfarray.pixels_alpha(self._texts[text])
-            # arr[:, :] = (arr[:, :] * (50 / 255)).astype(arr.dtype)
-
         if align == 'left':
             screen.blit(self._texts[text], (x, y))
         elif align == 'center':
@@ -70,11 +58,7 @@ class Text:
             raise NotImplementedError()
 
 
-
-
-
 class Display:
-
     def __init__(self, screen, game) -> None:
         self.screen = screen
         self.game = game
@@ -88,8 +72,8 @@ class Display:
             self.start_time = datetime.now()
             self.text = text
 
-            hex = game.map.get(r, c).geometry
-            self.x, self.y = hex.x, hex.y
+            geom = game.map.get(r, c).geometry
+            self.x, self.y = geom.x, geom.y
 
     def show_damage_text(self, text, r, c):
         self.damage_texts.append(self.DisappearingText(self.game, text, r, c))
@@ -109,9 +93,9 @@ class Display:
 
     def _print_grid_coords(self):
         for r, row in enumerate(self.game.map.tiles):
-            for c, hex in enumerate(row):
-                self.text_module.text_to_screen(self.screen, f'{(r, c)}', hex.x - 12, hex.y - 3,
-                                                size=10, color=(0,0,0))
+            for c, geom in enumerate(row):
+                self.text_module.text_to_screen(self.screen, f'{(r, c)}', geom.x - 12, geom.y - 3,
+                                                size=10, color=(0, 0, 0))
 
     def _draw_polygon_alpha(self, color, points, surface=None):
         lx, ly = zip(*points)
@@ -137,15 +121,14 @@ class Display:
         for player in self.game.players:
             for city in player.cities:
                 for tile_coord in city.tiles_set:
-                    hex = self.game.map.get(*tile_coord).geometry
+                    geom = self.game.map.get(*tile_coord).geometry
 
                     # borders
                     for n_index, neighbour in enumerate(self.game.map.get_neighbours_grid_coords(*tile_coord)):
 
                         if neighbour is None or self.game.map.whom_cell_is_it(self.game, *neighbour) != player.nation:
                             pygame.draw.line(self.screen, Nations.COLORS[player.nation],
-                                             hex.points[n_index], hex.points[(n_index + 1) % 6], width=5)
-
+                                             geom.points[n_index], geom.points[(n_index + 1) % 6], width=5)
 
         for r, row in enumerate(self.game.map.tiles):
             for c, tile in enumerate(row):
@@ -160,36 +143,41 @@ class Display:
                 unit.draw(self.screen, self.game)
 
     def _update_paths(self):
-        unit_selected = self.game.get_selected_unit()
-        if unit_selected is None:
+        obj_selected = self.game.get_selected_unit() or self.game.get_selected_city()
+
+        if obj_selected is None:
             return
 
-        if unit_selected.get_ranged_target(self.game) is None and len(unit_selected.path) == 0:
+        ranged_target = obj_selected.get_ranged_target(self.game)
+
+        if ranged_target is None and len(obj_selected.path) == 0:
             return
 
-        ranged_target = unit_selected.get_ranged_target(self.game)
+        if ranged_target is None and isinstance(obj_selected, City):
+            return
+
         if ranged_target is not None:
             unit_enemy = ranged_target
 
-            from_hex = self.game.map.get(unit_selected.r, unit_selected.c).geometry
+            from_hex = self.game.map.get(obj_selected.r, obj_selected.c).geometry
             target_hex = self.game.map.get(unit_enemy.r, unit_enemy.c).geometry
             self.draw_arrow(pygame.Vector2(from_hex.x, from_hex.y),
                             pygame.Vector2(target_hex.x, target_hex.y),
                             pygame.Color(0, 0, 0))
         else:
             # mp_used = 0
-            mp_left = unit_selected.mp
+            mp_left = obj_selected.mp
             last_step_number = 0
-            path_r_prev, path_c_prev = unit_selected.path[0]
+            path_r_prev, path_c_prev = obj_selected.path[0]
 
             indices = []
-            for i, (path_r, path_c) in enumerate(unit_selected.path[1:]):
+            for i, (path_r, path_c) in enumerate(obj_selected.path[1:]):
 
                 move_cost = self.game.map.get_data_edge((path_r_prev, path_c_prev), (path_r, path_c))['cost']
 
                 if mp_left < move_cost:
                     step_number = last_step_number + 1
-                    mp_left = unit_selected.mp_base
+                    mp_left = obj_selected.mp_base
                     mp_left -= move_cost
                     indices.append(i-1)
                 else:
@@ -199,10 +187,10 @@ class Display:
                 last_step_number = step_number
                 path_r_prev, path_c_prev = path_r, path_c
 
-            for i, (path_r, path_c) in enumerate(unit_selected.path[1:]):
+            for i, (path_r, path_c) in enumerate(obj_selected.path[1:]):
                 path_hex = self.game.map.get(path_r, path_c).geometry
 
-                if i in indices or (i == len(unit_selected.path) - 2):
+                if i in indices or (i == len(obj_selected.path) - 2):
                     radius = 8
                     pygame.draw.circle(self.screen, (128, 0, 128), (path_hex.x, path_hex.y), radius=radius)
 
@@ -218,7 +206,7 @@ class Display:
         for ui_element in self.game.ui.ui_elements:
             ui_element.draw(self.screen, self.game, self.text_module)
 
-        units = self.game.get_current_player().units
+        units = self.game.get_current_player().game_objects
 
         pygame.draw.rect(
             self.screen,
@@ -235,6 +223,7 @@ class Display:
         unit = next((u for u in units if u.is_selected), None)
         if unit is not None:
             self.screen.blit(unit.image_ui, (55, 605))
+
             self.text_module.text_to_screen(self.screen,
                                             f'HP: {unit.hp}\n MP: {unit.mp}',
                                             x=55,

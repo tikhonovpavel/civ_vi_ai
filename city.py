@@ -1,8 +1,7 @@
 import pygame
 
-from display import UI_UNIT_IMAGE_SIZE
+from consts import UI_CITY_IMAGE_SIZE
 from game_object import MilitaryObject
-# from unit import UnitCategories
 
 
 class City(MilitaryObject):
@@ -26,7 +25,7 @@ class City(MilitaryObject):
 
         image = pygame.image.load(image_path)
         self.image = pygame.transform.scale(image, self.DEFAULT_CITY_IMAGE_SIZE)
-        self.image_ui = pygame.transform.scale(image, UI_UNIT_IMAGE_SIZE)
+        self.image_ui = pygame.transform.scale(image, UI_CITY_IMAGE_SIZE)
 
         self.hp = City.MAX_HP
         self.walls_hp = City.MAX_WALLS_HP
@@ -67,7 +66,9 @@ class City(MilitaryObject):
         if enemy_unit.hp - enemy_unit_damage <= 0:
             if not isinstance(enemy_unit, City):
                 enemy_unit.player.destroy(enemy_unit)
-                game.map.set(enemy_unit.r, enemy_unit.c, [])
+
+                game.map.reset(enemy_unit.r, enemy_unit.c)
+                # game.map.set(enemy_unit.r, enemy_unit.c, [])
             else:
                 enemy_unit.hp = 0
         else:

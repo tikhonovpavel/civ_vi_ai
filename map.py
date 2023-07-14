@@ -7,6 +7,8 @@ import random
 from game_object import MilitaryObject
 from sortedcontainers import SortedList
 
+from city import City
+
 radius = 20
 
 
@@ -61,6 +63,8 @@ class Map:
         self.tiles = []
         self._graph = nx.DiGraph()
 
+        self._default_value = lambda: SortedList(key=lambda x: 0 if isinstance(x, City) else 1)
+
         side = math.sqrt(3) / 2 * radius
         
         for r in range(rows):
@@ -72,8 +76,7 @@ class Map:
                 else:
                     row.append(Tile(1.5 * radius * (c * 2 + 1) + offset_x, side * r + offset_y))
 
-                from city import City
-                self._graph.add_node((r, c), game_objects=SortedList(key=lambda x: 0 if isinstance(x, City) else 1))
+                self._graph.add_node((r, c), game_objects=self._default_value())
                 # print(self._graph[(r, c)]['game_objects'])
                 # print()
 
@@ -96,6 +99,9 @@ class Map:
 
     def set(self, r, c, value: List[MilitaryObject]):
         self._graph.nodes[r, c]['game_objects'] = value
+
+    def reset(self, r, c):
+        self._graph.nodes[r, c]['game_objects'] = self._default_value()
 
     def remove(self, r, c, game_object):
         self.get(r, c).game_objects.remove(game_object)

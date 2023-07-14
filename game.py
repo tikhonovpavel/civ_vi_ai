@@ -317,21 +317,21 @@ class Game:
     def set_allowed_shortest_path(self, unit, to_r, to_c):
         current_player = self.get_current_player()
 
-        disallowed_edges = []
+        disallowed_edges = set()
         unit_allowed_hexes = self.map._graph.copy()
         enemies = self.diplomacy.get_enemies(current_player)
         for enemy in enemies:
-            for enemy_unit in enemy.units:
+            for enemy_unit in enemy.game_objects:
                 adj_nodes = unit_allowed_hexes.adj[enemy_unit.r, enemy_unit.c].keys()
 
                 if enemy_unit.r == to_r and enemy_unit.c == to_c:
                     disallowed_nodes = [x for x in adj_nodes
-                                        if len(unit_allowed_hexes.nodes[x]['game_objects'] or []) > 0
+                                        if len(unit_allowed_hexes.nodes[x]['game_objects']) > 0
                                         if x != (unit.r, unit.c)]
                 else:
                     disallowed_nodes = adj_nodes
 
-                disallowed_edges.extend([(x, (enemy_unit.r, enemy_unit.c)) for x in disallowed_nodes])
+                disallowed_edges.update([(x, (enemy_unit.r, enemy_unit.c)) for x in disallowed_nodes])
 
         for frm, to in disallowed_edges:
             unit_allowed_hexes.remove_edge(frm, to)
