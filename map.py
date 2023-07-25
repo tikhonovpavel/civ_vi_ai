@@ -13,15 +13,16 @@ radius = 20
 
 
 class TerrainType:
-    def __init__(self, image_path, cost):
+    def __init__(self, name, image_path, cost):
+        self.name = name
         self.image_path = image_path
         self.cost = cost
 
 
 class TerrainTypes:
-    PLAINS = TerrainType('assets/tiles/plains.png', cost=1)
-    HILLS = TerrainType('assets/tiles/hills.png', cost=2)
-    FOREST = TerrainType('assets/tiles/forest.png', cost=2)
+    PLAINS = TerrainType('plains', 'assets/tiles/plains.png', cost=1)
+    HILLS = TerrainType('hills', 'assets/tiles/hills.png', cost=2)
+    FOREST = TerrainType('forest', 'assets/tiles/forest.png', cost=2)
     # SNOW =
     # TUNDRA =
     # MOUNTAIN =
@@ -97,6 +98,10 @@ class Map:
         return Map.Cell(self.tiles[r][c],
                         self._graph.nodes[r, c]['game_objects'])
 
+    def get_terrains_map(self):
+        return [[self.get(r, c).geometry.terrain.name for c in range(self.n_columns)]
+                for r in range(self.n_rows)]
+
     def set(self, r, c, value: List[MilitaryObject]):
         self._graph.nodes[r, c]['game_objects'] = value
 
@@ -127,6 +132,15 @@ class Map:
         result = [(row, col) if 0 <= row < self.n_rows and 0 <= col < self.n_columns else None for row, col in result]
 
         return result
+
+    def get_nearest_obj(self, obj, collection):
+        try:
+            result_obj = min(collection, key=lambda o: self.get_distance((obj.r, obj.c), (o.r, o.c)))
+            result_dist = self.get_distance((obj.r, obj.c), (result_obj.r, result_obj.c))
+        except ValueError:
+            return None, math.inf
+
+        return result_obj, result_dist
 
     def get_grid_coords(self, x, y):
         min_dist, min_r, min_c = math.inf, None, None

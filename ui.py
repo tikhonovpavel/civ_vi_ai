@@ -154,3 +154,5 @@ class UI:
             if ui_element.rect.collidepoint(pos):
                 ui_element.click()
                 ui_element.draw(display.screen, display.game, display.text_module)
+
+

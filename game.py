@@ -1,14 +1,16 @@
 import json
 from datetime import datetime
+from itertools import dropwhile
 
 import pygame
 from line_profiler_pycharm import profile
 
 import networkx as nx
 
-from ai import DoNothingAI
+from ai import DoNothingAI, SimpleAI, SimpleAIHikikomori
 from city import City
 from display import Display
+from logger import Logger
 
 from ui import Button, Marker, UI, Text  # , UI
 
@@ -44,14 +46,18 @@ class Diplomacy:
 class Game:
     COMBAT_MINIMUM_DAMAGE = 1
 
+    # @log("Start new game")
     def __init__(self, screen, clock) -> None:
         self.map = Map(30, 15)
 
-        player1 = Player('Rome')
-        player2 = Player('Egypt', ai=DoNothingAI(self))
-        # player2 = Player('Egypt', ai=SimpleAI(self))
+        # player1 = Player('Rome')
+        player1 = Player('Rome', ai=SimpleAI(self))
 
-        self.players = [player1, player2]
+        # player2 = Player('Egypt', ai=DoNothingAI(self))
+        player2 = Player('Egypt', ai=SimpleAI(self))
+        player3 = Player('Babylon', ai=SimpleAIHikikomori(self))
+
+        self.players = [player1, player2, player3]
 
         with open('init_state.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
@@ -69,29 +75,42 @@ class Game:
 
                     self.add_city(player, city)
 
-        self.add_unit(player1, Units.Tank, 15, 3)
-        self.add_unit(player1, Units.Tank, 12, 4)
-        self.add_unit(player1, Units.Tank, 13, 4)
-        self.add_unit(player1, Units.Tank, 12, 5)
+        self.add_unit(player1, Units.Tank, 4, 1)
+        self.add_unit(player1, Units.Tank, 4, 3)
+        self.add_unit(player1, Units.Tank, 4, 4)
+        self.add_unit(player1, Units.Tank, 1, 4)
+        self.add_unit(player1, Units.Tank, 5, 3)
         self.add_unit(player1, Units.Tank, 8, 3)
-        self.add_unit(player1, Units.Tank, 23, 13)
+        self.add_unit(player1, Units.Tank, 7, 2)
+        self.add_unit(player1, Units.Tank, 7, 1)
         self.add_unit(player1, Units.Artillery, 10, 2)
-        self.add_unit(player1, Units.Artillery, 14, 4)
-        self.add_unit(player1, Units.Artillery, 25, 12)
-        self.add_unit(player1, Units.Artillery, 28, 13)
-        self.add_unit(player1, Units.Artillery, 28, 14)
-        self.add_unit(player1, Units.Artillery, 27, 14)
+        self.add_unit(player1, Units.Artillery, 8, 1)
+        self.add_unit(player1, Units.Artillery, 10, 1)
+        self.add_unit(player1, Units.Artillery, 3, 2)
 
-        self.add_unit(player2, Units.Tank, 15, 4)
-        self.add_unit(player2, Units.Tank, 5, 11)
-        self.add_unit(player2, Units.Tank, 8, 12)
-        self.add_unit(player2, Units.Tank, 14, 12)
-        self.add_unit(player2, Units.Tank, 1, 0)
+
+
+        self.add_unit(player2, Units.Tank, 10, 4).hp = 10
+
+        self.add_unit(player2, Units.Tank, 25, 10)
+        self.add_unit(player2, Units.Tank, 25, 12)
+        self.add_unit(player2, Units.Tank, 25, 11)
+        self.add_unit(player2, Units.Tank, 28, 12)
+        self.add_unit(player2, Units.Tank, 20, 12)
+        self.add_unit(player2, Units.Tank, 21, 12)
+        self.add_unit(player2, Units.Tank, 24, 13)
+        self.add_unit(player2, Units.Tank, 23, 13)
         self.add_unit(player2, Units.Tank, 25, 13)
-        self.add_unit(player2, Units.Artillery, 7, 11)
-        self.add_unit(player2, Units.Artillery, 7, 13)
-        self.add_unit(player2, Units.Artillery, 7, 14)
-        self.add_unit(player2, Units.Artillery, 17, 12)
+        self.add_unit(player2, Units.Artillery, 27, 11)
+        self.add_unit(player2, Units.Artillery, 27, 13)
+        self.add_unit(player2, Units.Artillery, 27, 14)
+        self.add_unit(player2, Units.Artillery, 27, 12)
+
+        self.add_unit(player3, Units.Artillery, 15, 7)
+        self.add_unit(player3, Units.Tank, 14, 7)
+        # self.add_unit(player3, Units.Tank, 14, 8)
+        # self.add_unit(player3, Units.Tank, 16, 7)
+        self.add_unit(player3, Units.Tank, 16, 8)
 
         self._current_player_index = 0
 
@@ -116,9 +135,13 @@ class Game:
         self.diplomacy = Diplomacy(self.players)
         for i in range(len(self.players)):
             for j in range(i + 1, len(self.players)):
-                self.diplomacy.set_relation(player1, player2, Diplomacy.WAR)
+                self.diplomacy.set_relation(self.players[i], self.players[j], Diplomacy.WAR)
         for player in self.players:
             self.diplomacy.set_relation(player, player, Diplomacy.ALLIES)
+
+        self.logger = Logger(map_size=(self.map.n_rows, self.map.n_columns),
+                             map=self.map.get_terrains_map(),
+                             initial_positions=self._get_initial_positions_string())
 
         self.clock = clock
         self.display = Display(screen, self)
@@ -126,6 +149,17 @@ class Game:
         self.current_turn_text.update(turn_number=self.turn_number)
         self.current_player_text.update(current_player=self.players[0].nation)
         self.update()
+
+        self.logger.start_turn(self.get_current_player().nation)
+
+    def _get_initial_positions_string(self):
+        result = []
+
+        for p in self.players:
+            result.append({'nation': p.nation,
+                           'units': [{'type': u.name,
+                                      'coords': (u.r, u.c)} for u in p.units]})
+        return result
 
     def get_player_by_nation(self, nation):
         return next(p for p in self.players if p.nation == nation)
@@ -158,7 +192,16 @@ class Game:
                                'w', encoding='utf-8'),
                   ensure_ascii=False, indent=2)
 
+    def check_winning_conditions(self, player):
+        total_cities_n = sum(len(p.cities) for p in self.players)
+        return len(player.cities) == total_cities_n
+
+    # @log("Clicked next turn")
+    @profile
     def next_turn(self):
+        if self.check_winning_conditions(self.get_current_player()):
+            return
+
         self.subturn_number += 1
         if self.subturn_number % len(self.players) == 0:
             self.turn_number += 1
@@ -171,7 +214,14 @@ class Game:
             obj.can_attack = True
             obj.is_selected = False
 
+        if self.check_winning_conditions(self.get_current_player()):
+            print(self.get_current_player().nation + ' won!')
+            return
+
         self.set_next_current_player()
+
+        self.logger.commit()
+        self.logger.start_turn(self.get_current_player().nation)
 
         self.current_turn_text.update(turn_number=self.turn_number)
         self.current_player_text.update(current_player=self.get_current_player().nation)
@@ -230,7 +280,7 @@ class Game:
         if player is not None and only_enemies:
             print('Use player and only_enemies simultaneously with caution')
 
-        result = [(p, u) for p in self.players for u in (p.units + p.cities) if u.r == r and u.c == c]
+        result = [(p, o) for p in self.players for o in p.game_objects if o.r == r and o.c == c]
 
         if player is not None:
             result = [(p, u) for p, u in result if p == player]
@@ -250,6 +300,9 @@ class Game:
         self.display.update_all()
 
     def left_button_pressed(self, event):
+        # if self.check_winning_conditions(self.get_current_player()):
+        #     return
+
         mouse_x, mouse_y = event.pos
 
         self.ui.screen_click(event.pos, self.display)
@@ -262,23 +315,49 @@ class Game:
             return
 
         player = self.get_current_player()
-        for obj in (player.units + player.cities):
-            new_status = (obj.r == r and obj.c == c)
 
-            if self.sound_marker.state and (new_status and not obj.is_selected):
-                if isinstance(obj, Unit):
-                    self.unit_selected_sound.play()
-                elif isinstance(obj, City):
-                    self.city_selected_sound.play()
+        # если на (r, c) уже был выбран один, то надо снять маркер с него, и поставить на второго
+        # но ежели на нём не было выбрано ни одного, то поставить маркер только на первый из них
+        # при этом на всех остальных клетках тоже снять маркеры
+        rc_objects = []
+        for obj in player.game_objects:
+            if obj.r == r and obj.c == c:
+                rc_objects.append(obj)
+            else:
+                obj.is_selected = False
 
-            obj.is_selected = new_status
+
+        if len(rc_objects) > 0:
+            try:
+                selected_index = [o.is_selected for o in rc_objects].index(True)
+            except ValueError:
+                selected_index = -1
+
+            for i, obj in enumerate(rc_objects):
+                obj.is_selected = (i == (selected_index + 1) % len(rc_objects))
+
+        selected_count = 0
+        selected = []
+        for obj in player.game_objects:
+            selected_count += int(obj.is_selected)
+            if obj.is_selected:
+                selected.append((obj.r, obj.c))
+
+        print(f'how many are selected?: {selected_count}')
+        if selected_count > 1:
+            print(selected)
+            print()
+
 
         self.update()
 
-
-    @profile
+    # @profile
     def right_button_pressed(self, mouse_x, mouse_y):
         current_player = self.get_current_player()
+
+        if self.check_winning_conditions(current_player):
+            return
+
         current_player.no_attack()
 
         obj_selected = self.get_selected_unit() or self.get_selected_city()
@@ -344,9 +423,12 @@ class Game:
         except nx.exception.NetworkXNoPath:
             unit.path = []
 
-    @profile
+    # @profile
     def right_button_released(self, mouse_x, mouse_y):
         current_player = self.get_current_player()
+
+        if self.check_winning_conditions(current_player):
+            return
 
         obj_selected = self.get_selected_unit() or self.get_selected_city()
         if obj_selected is None:
@@ -365,3 +447,8 @@ class Game:
         if (len(obj_selected.path) != 0 and (r, c) == obj_selected.path[-1]) \
                 or (obj_selected.get_ranged_target(self) is not None):
             obj_selected.move(self)
+
+            # check if the winning conditions holds
+            if self.check_winning_conditions(self.get_current_player()):
+                print(self.get_current_player().nation + ' won!')
+                return

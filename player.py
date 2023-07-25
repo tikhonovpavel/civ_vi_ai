@@ -38,8 +38,9 @@ class Player:
 
         return city
 
-    def destroy(self, game_object):
+    def destroy(self, game, game_object):
         if game_object in self.units:
+            game.map.remove(game_object.r, game_object.c, game_object)
             self.units.remove(game_object)
         elif game_object in self.cities:
             self.cities.remove(game_object)

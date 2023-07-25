@@ -2,6 +2,7 @@ import math
 import random
 
 import pygame
+from line_profiler_pycharm import profile
 
 
 class MilitaryObject:
@@ -76,6 +77,10 @@ class MilitaryObject:
         return self._ranged_strength_base  # + modifiers
 
     def ranged_attack(self, game, enemy_r, enemy_c):
+        raise NotImplementedError()
+
+    @profile
+    def move(self):
         raise NotImplementedError()
 
     @staticmethod

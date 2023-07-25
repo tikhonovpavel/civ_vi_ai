@@ -3,10 +3,13 @@ import math
 import pygame
 import random
 
+from line_profiler_pycharm import profile
+
 from city import City
 from game_object import MilitaryObject
+from logger import MoveEvent, CombatAttackEvent, RangedAttackEvent
 
-random.seed(1)
+random.seed(42)
 
 from consts import DEFAULT_UNIT_IMAGE_SIZE, UI_UNIT_IMAGE_SIZE
 
@@ -37,7 +40,7 @@ def get_nation_icon(nation):
 
 
 nation_icons = dict()
-for player_nation in ['Rome', 'Egypt']:
+for player_nation in ['Rome', 'Egypt', 'Babylon']:
     icon = pygame.image.load(get_nation_icon(player_nation))
     nation_icons[player_nation] = {'default': pygame.transform.scale(icon, DEFAULT_NATION_IMAGE_SIZE),
                                    'ui': pygame.transform.scale(icon, UI_NATION_IMAGE_SIZE)}
@@ -63,12 +66,17 @@ class Unit(MilitaryObject):
         # self.sound_attack = pygame.mixer.Sound(sound_attack) if sound_attack else None
         # self.sound_movement = pygame.mixer.Sound(sound_movement) if sound_movement else None
 
+    # @log("{arg0.player.nation}'s {arg0.name} on ({arg0.r}, {arg0.c}) performs combat attack on ({arg2}, {arg3})")
     def combat_attack(self, game, enemy_r, enemy_c):
-
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
 
         enemy_unit_damage = self.compute_combat_damage(self, enemy_obj)
         unit_damage = self.compute_combat_damage(enemy_obj, self)
+
+        game.logger.log_event(CombatAttackEvent(self.name, unit_location=(self.r, self.c),
+                                                target_location=(enemy_r, enemy_c),
+                                                unit_damage=unit_damage,
+                                                enemy_damage=enemy_unit_damage))
 
         print(f"{self.player.nation}'s {self.name} on {self.r, self.c} => "
               f"{enemy_obj.player.nation}'s {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
@@ -89,24 +97,27 @@ class Unit(MilitaryObject):
             if isinstance(enemy_obj, City):
                 for u in game.map.get(enemy_obj.r, enemy_obj.c).game_objects:
                     if isinstance(u, Unit):
-                        game.map.get(u.r, u.c).game_objects.remove(u)
-                        enemy_obj.player.destroy(u)
+                        # game.map.get(u.r, u.c).game_objects.remove(u)
+                        enemy_obj.player.destroy(game, u)
 
                 enemy_obj.change_ownership(self.player)
 
+            elif isinstance(enemy_obj, Unit):
+                enemy_obj.player.destroy(game, enemy_obj)  # del enemy_unit
             else:
-                enemy_obj.player.destroy(enemy_obj)  # del enemy_unit
+                raise NotImplementedError()
 
             self.hp = max(1, self.hp - unit_damage)
-            self.move_unconditionaly(game, enemy_obj.r, enemy_obj.c)
+
+            game.logger.log_event(MoveEvent(self.name, unit_location=(self.r, self.c),
+                                            path=[(self.r, self.c), (enemy_obj.r, enemy_obj.c)]))
+            self.move_unconditionally(game, enemy_obj.r, enemy_obj.c)
 
             self.mp -= 1  # -1 to MP because of the attack
 
         elif self.hp - unit_damage <= 0:
 
-            self.player.destroy(self)
-            game.map.remove(self.r, self.c, self)
-
+            self.player.destroy(game, self)
             enemy_obj.hp = max(1, enemy_obj.hp - enemy_unit_damage)
 
         else:
@@ -116,17 +127,22 @@ class Unit(MilitaryObject):
             # -1 to MP because of the attack
             self.mp -= 1  # self.selected = False
 
-            avail_path_coords = self._get_available_path_coords(game)
-            if len(avail_path_coords) >= 2:
-                # if avail_path_coords[-1]'s is_attack is True then avail_path_coords[-2][0] will be adjacent,
-                # so it guarantied to be legal move
-                self.move_unconditionaly(game, *avail_path_coords[-2][0])
+            # avail_path_coords = self._get_available_path_coords(game)
+            # if len(avail_path_coords) >= 2:
+            #     # if avail_path_coords[-1]'s is_attack is True then avail_path_coords[-2][0] will be adjacent,
+            #     # so it is guarantied to be a legal move
+            #     game.logger.log_event(MoveEvent(self.name, (self.r, self.c),
+            #                                     path=[coords for coords, _, _ in avail_path_coords]))
+            #     self.move_unconditionally(game, *avail_path_coords[-2][0])
 
         self.can_attack = False
         self.path = []
 
         enemy_obj.path = []
 
+        return unit_damage, enemy_unit_damage
+
+    # @log("{arg0.player.nation}'s {arg0.name} on ({arg0.r}, {arg0.c}) performs ranged attack on ({arg2}, {arg3})")
     def ranged_attack(self, game, enemy_r, enemy_c):
         enemy_unit = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
         enemy_unit_damage = MilitaryObject.compute_ranged_damage(self, enemy_unit)
@@ -143,24 +159,30 @@ class Unit(MilitaryObject):
 
         if enemy_unit.hp - enemy_unit_damage <= 0:
             if not isinstance(enemy_unit, City):
-                enemy_unit.player.destroy(enemy_unit)
-
+                enemy_unit.player.destroy(game, enemy_unit)
                 game.map.reset(enemy_unit.r, enemy_unit.c)
+
                 # game.map.set(enemy_unit.r, enemy_unit.c, [])
             else:
                 enemy_unit.hp = 0
         else:
             enemy_unit.hp -= enemy_unit_damage
 
+
+
         self.mp = 0
         self.path = []
         self.can_attack = False
+
+        return enemy_unit_damage
 
     def gain_hps(self):
         if self.mp == self.mp_base:
             if any(city.is_cell_inside(self.r, self.c) for city in self.player.cities):
                 self.hp = min(100, self.hp + 10)
 
+    # @log("{arg0.player.nation}'s {arg0.name} on ({arg0.r}, {arg0.c}) moves from ({arg0.r}, {arg0.c}) to ()")
+    @profile
     def move(self, game):
         # if there is just a transition without an attack - the logic is the same for any type of unit
         if len(self.path) == 0 and self.get_ranged_target(game) is None:
@@ -169,7 +191,10 @@ class Unit(MilitaryObject):
         # check if ranged unit inside the attack radius
         ranged_target = self.get_ranged_target(game)
         if ranged_target is not None:
-            self.ranged_attack(game, ranged_target.r, ranged_target.c)
+            enemy_unit_damage = self.ranged_attack(game, ranged_target.r, ranged_target.c)
+            game.logger.log_event(RangedAttackEvent(self.name, unit_location=(self.r, self.c),
+                                                    target_location=(ranged_target.r, ranged_target.c),
+                                                    enemy_damage=enemy_unit_damage))
         else:
             avail_path_coords = self._get_available_path_coords(game)
             if len(avail_path_coords) == 0:
@@ -179,19 +204,28 @@ class Unit(MilitaryObject):
             new_r, new_c = coord
 
             if is_attack and self.category == MilitaryObject.COMBAT:
-                self.combat_attack(game, new_r, new_c)
+
+                if len(avail_path_coords) > 1:
+                    game.logger.log_event(MoveEvent(self.name, (self.r, self.c),
+                                                    path=[coords for coords, _, _ in avail_path_coords[:-1]]))
+                    self.move_unconditionally(game, *avail_path_coords[-2][0])
+
+                unit_damage, enemy_unit_damage = self.combat_attack(game, new_r, new_c)
             else:
-                self.move_unconditionaly(game, new_r, new_c)
+                game.logger.log_event(MoveEvent(self.name, (self.r, self.c),
+                                                path=[coords for coords, _, _ in avail_path_coords]))
+                self.move_unconditionally(game, new_r, new_c)
                 self.mp = max(0, self.mp - mp_spent)
 
                 self.path = self.path[self.path.index(coord):]
                 # self.ranged_target = None
 
-        game.update()
+        # game.update()
 
+    # @log("{arg0.player.nation}'s {arg0.name} on ({arg0.r}, {arg0.c}) follows the path: {result}")
     def _get_available_path_coords(self, game) -> List[Tuple[Tuple[int, int], int, bool]]:
         '''
-        is_attack can be true only if it is the last one
+        is_attack can be true only if it is the last one, and if it isn't a ranged unit
 
         :param game:
         :return: [(coord1, mp_spent1, is_attack1), ...]
@@ -216,7 +250,7 @@ class Unit(MilitaryObject):
             new_tile_unit = next(iter(game.map.get(*path_coord).game_objects), None)
 
             if new_tile_unit is not None:
-                if game.is_enemy(new_tile_unit.player) and self.can_attack:  # it's the last available state
+                if game.is_enemy(new_tile_unit.player) and self.can_attack and self.category == MilitaryObject.COMBAT:
                     result.append((path_coord, self.mp - mp_left + move_cost, True))
                     return result
                 elif isinstance(new_tile_unit, Unit):  # skip the tile
@@ -232,7 +266,7 @@ class Unit(MilitaryObject):
 
         return result
 
-    def move_unconditionaly(self, game, new_r, new_c):
+    def move_unconditionally(self, game, new_r, new_c):
         game.map.remove(self.r, self.c, self)
         game.map.get(new_r, new_c).game_objects.add(self)
 
@@ -241,16 +275,16 @@ class Unit(MilitaryObject):
 
 
     def draw(self, screen, game):
-        hex = game.map.get(self.r, self.c).geometry
+        geom = game.map.get(self.r, self.c).geometry
 
         if self.is_selected:
-            pygame.draw.polygon(screen, SELECTED_TILE_COLOR, hex.points, 0)
-            pygame.draw.polygon(screen, (0, 0, 0), hex.points, 1)
+            pygame.draw.polygon(screen, SELECTED_TILE_COLOR, geom.points, 0)
+            pygame.draw.polygon(screen, (0, 0, 0), geom.points, 1)
 
         nation_image = nation_icons[self.player.nation]['default']
         screen.blit(self.image,
-                    (hex.x - self.image.get_width() / 2, hex.y - self.image.get_height() / 2))
-        screen.blit(nation_image, (hex.x - nation_image.get_width() / 2, hex.y + 7))
+                    (geom.x - self.image.get_width() / 2, geom.y - self.image.get_height() / 2))
+        screen.blit(nation_image, (geom.x - nation_image.get_width() / 2, geom.y + 7))
 
         hp_offset = 15
         hp_length = 16
@@ -259,12 +293,12 @@ class Unit(MilitaryObject):
         pygame.draw.rect(
             screen,
             (255, 0, 0),
-            (hex.x - hp_length / 2, hex.y - hp_offset, hp_length * (self.hp / 100), hp_thickness), )
+            (geom.x - hp_length / 2, geom.y - hp_offset, hp_length * (self.hp / 100), hp_thickness), )
 
         pygame.draw.rect(
             screen,
             (0, 0, 0),
-            (hex.x - hp_length / 2, hex.y - hp_offset, hp_length, hp_thickness),
+            (geom.x - hp_length / 2, geom.y - hp_offset, hp_length, hp_thickness),
             width=1)
 
 
@@ -279,5 +313,5 @@ class Units:
     Artillery = lambda player, r, c: Unit('artillery', player, r, c,
                                           category=MilitaryObject.RANGED,
                                           image_path='assets/units/artillery.png', mp_base=3,
-                                          ranged_strength_base=100, range_radius_base=2, combat_strength_base=75,
+                                          ranged_strength_base=90, range_radius_base=2, combat_strength_base=70,
                                           sound_attack='assets/sounds/artillery_attack.ogg')

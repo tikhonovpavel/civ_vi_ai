@@ -1,4 +1,5 @@
 import pygame
+from line_profiler_pycharm import profile
 
 from consts import UI_CITY_IMAGE_SIZE
 from game_object import MilitaryObject
@@ -65,9 +66,9 @@ class City(MilitaryObject):
 
         if enemy_unit.hp - enemy_unit_damage <= 0:
             if not isinstance(enemy_unit, City):
-                enemy_unit.player.destroy(enemy_unit)
+                enemy_unit.player.destroy(game, enemy_unit)
 
-                game.map.reset(enemy_unit.r, enemy_unit.c)
+                # game.map.reset(enemy_unit.r, enemy_unit.c)
                 # game.map.set(enemy_unit.r, enemy_unit.c, [])
             else:
                 enemy_unit.hp = 0
@@ -78,6 +79,7 @@ class City(MilitaryObject):
         self.path = []
         self.can_attack = False
 
+    @profile
     def move(self, game):
         # check if ranged unit inside the attack radius
         ranged_target = self.get_ranged_target(game)

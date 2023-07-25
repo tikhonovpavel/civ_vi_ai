@@ -1,6 +1,7 @@
-from line_profiler_pycharm import profile
+# from line_profiler_pycharm import profile
 
 import pygame
+
 from ui import ButtonStates
 from game import Game
 
@@ -9,7 +10,7 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
 
 
-@profile
+# @profile
 def main():
     # Initialize Pygame
     pygame.init()
@@ -28,7 +29,6 @@ def main():
 
         for event in pygame.event.get():
             lb, mb, rb = pygame.mouse.get_pressed()
-            # print(lb, mb, rb)
 
             if event.type == pygame.QUIT:
                 running = False
@@ -67,7 +67,6 @@ def main():
                     game.right_button_released(*event.pos)
 
         game.display.update_texts()
-        game.next_turn_button.draw(screen, game, game.display.text_module)
         pygame.display.update()
 
     pygame.quit()
