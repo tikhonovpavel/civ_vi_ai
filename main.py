@@ -1,6 +1,7 @@
 # from line_profiler_pycharm import profile
 
 import pygame
+from line_profiler_pycharm import profile
 
 from ui import ButtonStates
 from game import Game
@@ -10,7 +11,7 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
 
 
-# @profile
+@profile
 def main():
     # Initialize Pygame
     pygame.init()
@@ -44,14 +45,20 @@ def main():
                     tile_coord = game.map.get_grid_coords(*event.pos)
                     print(tile_coord)
 
-                    if tile_coord not in game.players[0].cities[0].tiles_set:
-                        game.players[0].cities[0].tiles_set.add(tile_coord)
-                    else:
-                        game.players[0].cities[0].tiles_set.remove(tile_coord)
+                    # res = game.map.get(*tile_coord).game_objects[0].get_reachable_cells(game)
+                    # for tile_coord in res:
+                    #     if tile_coord not in game.players[0].cities[0].tiles_set:
+                    #         game.players[0].cities[0].tiles_set.add(tile_coord)
+                    #     else:
+                    #         game.players[0].cities[0].tiles_set.remove(tile_coord)
+
+
+
+                    # if tile_coord not in game.players[0].cities[0].tiles_set:
+                    #     game.players[0].cities[0].tiles_set.add(tile_coord)
+                    # else:
+                    #     game.players[0].cities[0].tiles_set.remove(tile_coord)
                     game.update()
-                    # game.players
-                    # print(event.pos)
-                    # pygame.draw.circle(screen, (128, 0, 128), event.pos, radius=3)
 
                 if event.button == 3:  # 3 == right button
                     # print('rb pressed')

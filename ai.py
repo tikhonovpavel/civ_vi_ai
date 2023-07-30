@@ -4,19 +4,31 @@ from player import Player
 
 class AI:
 
-    def __init__(self, game):
+    def __init__(self, game, player):
         # self.player = player
         self.game = game
+        self.player = player
 
-    def create_paths(self, player: Player):
+    def create_paths(self):
         pass
 
 
-class DoNothingAI(AI):
-    def __init__(self, game):
-        super(DoNothingAI, self).__init__(game)
+class TrainableAI(AI):
+    def __init__(self, game, player):
+        super(TrainableAI, self).__init__(game, player)
 
-    def create_paths(self, player: Player):
+    def create_paths(self):
+        raise NotImplementedError()
+
+    def receive_reward(self, reward):
+        raise NotImplementedError()
+
+
+class DoNothingAI(AI):
+    def __init__(self, game, player):
+        super(DoNothingAI, self).__init__(game, player)
+
+    def create_paths(self):
         pass
 
 
@@ -26,10 +38,12 @@ class SimpleAI(AI):
 
     """
 
-    def __init__(self, game):
-        super(SimpleAI, self).__init__(game)
+    def __init__(self, game, player):
+        super(SimpleAI, self).__init__(game, player)
 
-    def create_paths(self, player: Player):
+    def create_paths(self):
+        player = self.player
+
         enemy_players = self.game.diplomacy.get_enemies(player)
         enemy_objects = sum((enemy.game_objects for enemy in enemy_players), start=[])
 
@@ -39,7 +53,7 @@ class SimpleAI(AI):
             if target_obj is None:
                 return
 
-            self.game.set_allowed_shortest_path(obj, target_obj.r, target_obj.c)
+            obj.set_allowed_shortest_path(self.game, target_obj.r, target_obj.c)
 
 
 class SimpleAIHikikomori(AI):
@@ -49,11 +63,13 @@ class SimpleAIHikikomori(AI):
 
     """
 
-    def __init__(self, game, max_distance_from_enemy=3):
-        super(SimpleAIHikikomori, self).__init__(game)
+    def __init__(self, game, player, max_distance_from_enemy=3):
+        super(SimpleAIHikikomori, self).__init__(game, player)
         self.max_distance_from_enemy = max_distance_from_enemy
 
-    def create_paths(self, player: Player):
+    def create_paths(self):
+        player = self.player
+
         enemy_players = self.game.diplomacy.get_enemies(player)
         enemy_units = sum((enemy.units for enemy in enemy_players), start=[])
 
@@ -64,4 +80,4 @@ class SimpleAIHikikomori(AI):
                 target_obj, _ = self.game.map.get_nearest_obj(obj, player.cities)
 
             if target_obj is not None:
-                self.game.set_allowed_shortest_path(obj, target_obj.r, target_obj.c)
+                obj.set_allowed_shortest_path(self.game, target_obj.r, target_obj.c)

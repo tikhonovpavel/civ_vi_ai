@@ -1,10 +1,12 @@
 import math
 
+import networkx as nx
 import pygame
 import random
 
 from line_profiler_pycharm import profile
 
+import rewards_values
 from city import City
 from game_object import MilitaryObject
 from logger import MoveEvent, CombatAttackEvent, RangedAttackEvent
@@ -45,13 +47,34 @@ for player_nation in ['Rome', 'Egypt', 'Babylon']:
     nation_icons[player_nation] = {'default': pygame.transform.scale(icon, DEFAULT_NATION_IMAGE_SIZE),
                                    'ui': pygame.transform.scale(icon, UI_NATION_IMAGE_SIZE)}
 
+names = {
+    'tank': iter([
+        "Iron Behemoth", "Steel Titan", "Armor Avalanche", "Tread Thunder", "Blitz Brute",
+        "Metal Maelstrom", "Shell Shock", "Ironclad Intimidator", "Armored Annihilator",
+        "Turret Titan", "Vortex Vanguard", "Tungsten Titan", "Bullet Blocker", "Siege Sentinel",
+        "Havoc Hammer", "Ground Gripper", "Momentum Monster", "Armor Antagonist",
+        "Battlefield Bruiser", "Tectonic Tanker", "Blaze Brute", "Iron Inferno", "Armor Anomaly",
+        "Thunder Thrasher", "Shield Shredder", "Turmoil Treader", "Decimator Dreadnought",
+        "Steel Saboteur", "Rampage Ranger", "Metal Marauder"]),
+    'artillery': iter([
+        "Shell Shredder", "Thunder Tosser", "Ballistic Bane", "Shockwave Spitter", "Range Reaper", "Muzzle Menace",
+        "Barrage Beast", "Blast Bouncer", "Siege Shooter", "Fire Flinger", "Firestorm Flinger",
+        "Shockwave Slinger", "Sonic Slammer", "Havoc Hurler", "Barrage Bouncer", "Rainmaker Renderer",
+        "Whiplash Whirler", "Onslaught Orbiter", "Ballistic Blaster", "Cataclysm Catapult", "Quake Queller",
+        "Torment Tornado", "Eruption Ejector", "Pinnacle Pulverizer", "Strife Striker", "Inferno Igniter",
+        "Blast Bludgeon", "Pandemonium Propeller", "Vortex Vanquisher", "Doom Dispatcher"
+    ])}
+
 
 class Unit(MilitaryObject):
-    def __init__(self, name, player, r, c, category, image_path,
+    def __init__(self, category, player, r, c, role, image_path,
                  mp_base, combat_strength_base, ranged_strength_base, range_radius_base,
-                 modifiers=None, sound_attack=None, sound_movement=None) -> None:
+                 modifiers=None, sound_attack=None, sound_movement=None, name=None) -> None:
 
-        super().__init__(name, player, r, c, category, mp_base, combat_strength_base,
+        if name is None:
+            name = next(names[category], None)
+
+        super().__init__(name, category, player, r, c, role, mp_base, combat_strength_base,
                          ranged_strength_base=ranged_strength_base,
                          range_radius_base=range_radius_base, modifiers=modifiers,
                          sound_attack=sound_attack, sound_movement=sound_movement)
@@ -66,20 +89,19 @@ class Unit(MilitaryObject):
         # self.sound_attack = pygame.mixer.Sound(sound_attack) if sound_attack else None
         # self.sound_movement = pygame.mixer.Sound(sound_movement) if sound_movement else None
 
-    # @log("{arg0.player.nation}'s {arg0.name} on ({arg0.r}, {arg0.c}) performs combat attack on ({arg2}, {arg3})")
     def combat_attack(self, game, enemy_r, enemy_c):
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
 
         enemy_unit_damage = self.compute_combat_damage(self, enemy_obj)
         unit_damage = self.compute_combat_damage(enemy_obj, self)
 
-        game.logger.log_event(CombatAttackEvent(self.name, unit_location=(self.r, self.c),
-                                                target_location=(enemy_r, enemy_c),
+        game.logger.log_event(CombatAttackEvent(self,
+                                                target=enemy_obj,
                                                 unit_damage=unit_damage,
                                                 enemy_damage=enemy_unit_damage))
 
-        print(f"{self.player.nation}'s {self.name} on {self.r, self.c} => "
-              f"{enemy_obj.player.nation}'s {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
+        print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
+              f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
               f"HP: ({self.hp} -> {max(0, self.hp - unit_damage)}) / "
               f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_unit_damage)})")
 
@@ -100,16 +122,26 @@ class Unit(MilitaryObject):
                         # game.map.get(u.r, u.c).game_objects.remove(u)
                         enemy_obj.player.destroy(game, u)
 
+                        self.player.reward += rewards_values.ENEMY_UNIT_DESTROYED
+                        enemy_obj.player.reward += rewards_values.OWN_UNIT_DESTROYED
+
                 enemy_obj.change_ownership(self.player)
+
+                self.player.reward += rewards_values.ENEMY_CITY_CAPTURED
+                enemy_obj.player.reward += rewards_values.OWN_CITY_CAPTURED_BY_ENEMY
+
 
             elif isinstance(enemy_obj, Unit):
                 enemy_obj.player.destroy(game, enemy_obj)  # del enemy_unit
+
+                self.player.reward += rewards_values.ENEMY_UNIT_DESTROYED
+                enemy_obj.player.reward += rewards_values.OWN_UNIT_DESTROYED
             else:
                 raise NotImplementedError()
 
             self.hp = max(1, self.hp - unit_damage)
 
-            game.logger.log_event(MoveEvent(self.name, unit_location=(self.r, self.c),
+            game.logger.log_event(MoveEvent(self,
                                             path=[(self.r, self.c), (enemy_obj.r, enemy_obj.c)]))
             self.move_unconditionally(game, enemy_obj.r, enemy_obj.c)
 
@@ -119,6 +151,8 @@ class Unit(MilitaryObject):
 
             self.player.destroy(game, self)
             enemy_obj.hp = max(1, enemy_obj.hp - enemy_unit_damage)
+
+            self.player.reward += rewards_values.OWN_UNIT_DESTROYED
 
         else:
             self.hp -= unit_damage
@@ -131,7 +165,7 @@ class Unit(MilitaryObject):
             # if len(avail_path_coords) >= 2:
             #     # if avail_path_coords[-1]'s is_attack is True then avail_path_coords[-2][0] will be adjacent,
             #     # so it is guarantied to be a legal move
-            #     game.logger.log_event(MoveEvent(self.name, (self.r, self.c),
+            #     game.logger.log_event(MoveEvent(self.category, (self.r, self.c),
             #                                     path=[coords for coords, _, _ in avail_path_coords]))
             #     self.move_unconditionally(game, *avail_path_coords[-2][0])
 
@@ -142,33 +176,33 @@ class Unit(MilitaryObject):
 
         return unit_damage, enemy_unit_damage
 
-    # @log("{arg0.player.nation}'s {arg0.name} on ({arg0.r}, {arg0.c}) performs ranged attack on ({arg2}, {arg3})")
     def ranged_attack(self, game, enemy_r, enemy_c):
-        enemy_unit = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
-        enemy_unit_damage = MilitaryObject.compute_ranged_damage(self, enemy_unit)
+        enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
+        enemy_unit_damage = MilitaryObject.compute_ranged_damage(self, enemy_obj)
 
-        print(f"{self.player.nation}'s {self.name} on {self.r, self.c} => "
-              f"{enemy_unit.player.nation}'s {enemy_unit.name} on {enemy_unit.r, enemy_unit.c}. "      
+        print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
+              f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
               f"HP: ({self.hp} -> {max(0, self.hp)}) / "
-              f"({enemy_unit.hp} -> {max(0, enemy_unit.hp - enemy_unit_damage)})")
+              f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_unit_damage)})")
 
         if game.sound_marker.state and self.sound_attack:
             self.sound_attack.play(maxtime=1500, fade_ms=500)
 
-        game.display.show_damage_text(f'-{min(100, int(enemy_unit_damage))}', enemy_unit.r, enemy_unit.c)
+        game.display.show_damage_text(f'-{min(100, int(enemy_unit_damage))}', enemy_obj.r, enemy_obj.c)
 
-        if enemy_unit.hp - enemy_unit_damage <= 0:
-            if not isinstance(enemy_unit, City):
-                enemy_unit.player.destroy(game, enemy_unit)
-                game.map.reset(enemy_unit.r, enemy_unit.c)
+        if enemy_obj.hp - enemy_unit_damage <= 0:
+            if not isinstance(enemy_obj, City):
+                enemy_obj.player.destroy(game, enemy_obj)
+                game.map.reset(enemy_obj.r, enemy_obj.c)
+
+                self.player.reward += rewards_values.ENEMY_UNIT_DESTROYED
+                enemy_obj.player.reward += rewards_values.OWN_UNIT_DESTROYED
 
                 # game.map.set(enemy_unit.r, enemy_unit.c, [])
             else:
-                enemy_unit.hp = 0
+                enemy_obj.hp = 0
         else:
-            enemy_unit.hp -= enemy_unit_damage
-
-
+            enemy_obj.hp -= enemy_unit_damage
 
         self.mp = 0
         self.path = []
@@ -181,7 +215,13 @@ class Unit(MilitaryObject):
             if any(city.is_cell_inside(self.r, self.c) for city in self.player.cities):
                 self.hp = min(100, self.hp + 10)
 
-    # @log("{arg0.player.nation}'s {arg0.name} on ({arg0.r}, {arg0.c}) moves from ({arg0.r}, {arg0.c}) to ()")
+    @profile
+    def move_one_cell(self, game, new_r, new_c):
+        assert new_r, new_c in game.map.get_neighbours_grid_coords(self.r, self.c)
+
+        self.path = [(self.r, self.c), (new_r, new_c)]
+        self.move(game)
+
     @profile
     def move(self, game):
         # if there is just a transition without an attack - the logic is the same for any type of unit
@@ -192,8 +232,8 @@ class Unit(MilitaryObject):
         ranged_target = self.get_ranged_target(game)
         if ranged_target is not None:
             enemy_unit_damage = self.ranged_attack(game, ranged_target.r, ranged_target.c)
-            game.logger.log_event(RangedAttackEvent(self.name, unit_location=(self.r, self.c),
-                                                    target_location=(ranged_target.r, ranged_target.c),
+            game.logger.log_event(RangedAttackEvent(self,
+                                                    target=ranged_target,
                                                     enemy_damage=enemy_unit_damage))
         else:
             avail_path_coords = self._get_available_path_coords(game)
@@ -203,26 +243,23 @@ class Unit(MilitaryObject):
             coord, mp_spent, is_attack = avail_path_coords[-1]
             new_r, new_c = coord
 
-            if is_attack and self.category == MilitaryObject.COMBAT:
+            if is_attack and self.role == MilitaryObject.COMBAT:
 
                 if len(avail_path_coords) > 1:
-                    game.logger.log_event(MoveEvent(self.name, (self.r, self.c),
-                                                    path=[coords for coords, _, _ in avail_path_coords[:-1]]))
+                    path_log = [(self.r, self.c)] + [coords for coords, _, _ in avail_path_coords[:-1]]
+                    game.logger.log_event(MoveEvent(self, path=path_log))
                     self.move_unconditionally(game, *avail_path_coords[-2][0])
 
                 unit_damage, enemy_unit_damage = self.combat_attack(game, new_r, new_c)
             else:
-                game.logger.log_event(MoveEvent(self.name, (self.r, self.c),
-                                                path=[coords for coords, _, _ in avail_path_coords]))
+                path_log = [(self.r, self.c)] + [coords for coords, _, _ in avail_path_coords]
+                game.logger.log_event(MoveEvent(self, path=path_log))
                 self.move_unconditionally(game, new_r, new_c)
                 self.mp = max(0, self.mp - mp_spent)
 
                 self.path = self.path[self.path.index(coord):]
                 # self.ranged_target = None
 
-        # game.update()
-
-    # @log("{arg0.player.nation}'s {arg0.name} on ({arg0.r}, {arg0.c}) follows the path: {result}")
     def _get_available_path_coords(self, game) -> List[Tuple[Tuple[int, int], int, bool]]:
         '''
         is_attack can be true only if it is the last one, and if it isn't a ranged unit
@@ -250,9 +287,12 @@ class Unit(MilitaryObject):
             new_tile_unit = next(iter(game.map.get(*path_coord).game_objects), None)
 
             if new_tile_unit is not None:
-                if game.is_enemy(new_tile_unit.player) and self.can_attack and self.category == MilitaryObject.COMBAT:
-                    result.append((path_coord, self.mp - mp_left + move_cost, True))
-                    return result
+                if game.is_enemy(new_tile_unit.player):
+                    if self.can_attack and self.role == MilitaryObject.COMBAT:
+                        result.append((path_coord, self.mp - mp_left + move_cost, True))
+                        return result
+                    else:
+                        continue
                 elif isinstance(new_tile_unit, Unit):  # skip the tile
                     mp_left -= move_cost
                     path_coord_prev = path_coord
@@ -263,6 +303,20 @@ class Unit(MilitaryObject):
 
             mp_left -= move_cost
             path_coord_prev = path_coord
+
+        return result
+
+    @profile
+    def get_reachable_cells(self, game):
+        result = []
+
+        for r in range(max(0, self.r - self.mp * 2), self.r + self.mp * 2 + 1):
+            for c in range(max(0, self.c - self.mp // 2), self.c + self.mp // 2 + 1):
+                try:
+                    if game.map.get_distance((self.r, self.c), (r, c), weight='cost') <= self.mp:
+                        result.append((r, c))
+                except nx.exception.NetworkXNoPath:
+                    pass
 
         return result
 
@@ -304,14 +358,14 @@ class Unit(MilitaryObject):
 
 class Units:
     Tank = lambda player, r, c: Unit('tank', player, r, c,
-                                     category=MilitaryObject.COMBAT,
+                                     role=MilitaryObject.COMBAT,
                                      image_path='assets/units/tank.png',
                                      mp_base=4, ranged_strength_base=0, range_radius_base=0,
                                      combat_strength_base=85,
                                      sound_attack='assets/sounds/tank_attack.ogg')
 
     Artillery = lambda player, r, c: Unit('artillery', player, r, c,
-                                          category=MilitaryObject.RANGED,
+                                          role=MilitaryObject.RANGED,
                                           image_path='assets/units/artillery.png', mp_base=3,
                                           ranged_strength_base=90, range_radius_base=2, combat_strength_base=70,
                                           sound_attack='assets/sounds/artillery_attack.ogg')

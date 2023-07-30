@@ -30,15 +30,14 @@ class TerrainTypes:
     # WATER_OCEAN =
 
 
-
 class Tile:
     def __init__(self, x, y) -> None:
         self.x = x
         self.y = y
 
-        # self.terrain = TerrainTypes.PLAINS
-        self.terrain = random.choices([TerrainTypes.PLAINS, TerrainTypes.HILLS, TerrainTypes.FOREST],
-                                      [0.5, 0.25, 0.25], k=1)[0]
+        self.terrain = TerrainTypes.PLAINS
+        # self.terrain = random.choices([TerrainTypes.PLAINS, TerrainTypes.HILLS, TerrainTypes.FOREST],
+        #                               [0.5, 0.25, 0.25], k=1)[0]
         
         self.points = []
         
@@ -117,11 +116,11 @@ class Map:
     def get_data_edge(self, tile1_coord, tile2_coord):
         return self._graph.edges[tile1_coord, tile2_coord]
 
-    def get_distance(self, from_rc, to_rc, graph=None):
+    def get_distance(self, from_rc, to_rc, graph=None, weight=None):
         if graph is None:
             graph = self._graph
 
-        return nx.shortest_path_length(graph, from_rc, to_rc)
+        return nx.shortest_path_length(graph, from_rc, to_rc, weight=weight)
 
     def get_neighbours_grid_coords(self, r, c):
         if r % 2 == 0:

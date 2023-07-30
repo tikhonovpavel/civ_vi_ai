@@ -7,16 +7,19 @@ from line_profiler_pycharm import profile
 
 import networkx as nx
 
-from ai import DoNothingAI, SimpleAI, SimpleAIHikikomori
+from ai import DoNothingAI, SimpleAI, SimpleAIHikikomori, TrainableAI
 from city import City
 from display import Display
 from logger import Logger
+# from rl_training import convert_map_to_tensor
+from rl_training import PolicyGradientAI
 
 from ui import Button, Marker, UI, Text  # , UI
 
 from map import Map
 from player import Player
 from unit import Units, Unit # , UnitCategories
+
 
 
 class Diplomacy:
@@ -47,17 +50,25 @@ class Game:
     COMBAT_MINIMUM_DAMAGE = 1
 
     # @log("Start new game")
+    @profile
     def __init__(self, screen, clock) -> None:
         self.map = Map(30, 15)
 
         # player1 = Player('Rome')
-        player1 = Player('Rome', ai=SimpleAI(self))
+        player1 = Player('Rome')
+        player1.ai = SimpleAI(self, player1)
+
+        player2 = Player('Egypt')
+        player2.ai = PolicyGradientAI(self, player2)
 
         # player2 = Player('Egypt', ai=DoNothingAI(self))
-        player2 = Player('Egypt', ai=SimpleAI(self))
-        player3 = Player('Babylon', ai=SimpleAIHikikomori(self))
+        # player2 = Player('Egypt', ai=SimpleAI(self))
+        player3 = Player('Babylon')
+        player3.ai = SimpleAIHikikomori(self, player3)
 
         self.players = [player1, player2, player3]
+
+        self._counter = 0
 
         with open('init_state.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
@@ -83,6 +94,7 @@ class Game:
         self.add_unit(player1, Units.Tank, 8, 3)
         self.add_unit(player1, Units.Tank, 7, 2)
         self.add_unit(player1, Units.Tank, 7, 1)
+        self.add_unit(player1, Units.Tank, 9, 11)
         self.add_unit(player1, Units.Artillery, 10, 2)
         self.add_unit(player1, Units.Artillery, 8, 1)
         self.add_unit(player1, Units.Artillery, 10, 1)
@@ -123,6 +135,7 @@ class Game:
         self.sound_marker = Marker('Sound', 770, 720+35, state=True, click_function=self.update)
         self.current_turn_text = Text('Turn: {turn_number}', 550, 690, 1, 1)
         self.current_player_text = Text("({current_player}'s turn)", 550, 730, 1, 1)
+        self.autoplay = True
 
         self.ui = UI([self.next_turn_button, self.save_state_button,
                       self.quick_movement_marker, self.sound_marker, self.current_turn_text,
@@ -152,12 +165,18 @@ class Game:
 
         self.logger.start_turn(self.get_current_player().nation)
 
+        # pgai = PolicyGradientAI(self)
+        # pgai.create_paths()
+        # convert_map_to_tensor(self, player1)
+
+
+
     def _get_initial_positions_string(self):
         result = []
 
         for p in self.players:
             result.append({'nation': p.nation,
-                           'units': [{'type': u.name,
+                           'units': [{'type': u.category,
                                       'coords': (u.r, u.c)} for u in p.units]})
         return result
 
@@ -177,7 +196,7 @@ class Game:
 
             res['units'] = []
             for unit in player.units:
-                fields = ['name', 'r', 'c', 'category', 'sub_category',
+                fields = ['name', 'r', 'c', 'role', 'sub_role',
                           'mp', 'hp', 'image_path', 'mb_base', 'ranged_strength_base',
                           'range_radius_base', 'combat_strength_base', 'path']
                 unit_json = {k: v for k, v in unit.__dict__.items() if k in fields}
@@ -199,14 +218,16 @@ class Game:
     # @log("Clicked next turn")
     @profile
     def next_turn(self):
-        if self.check_winning_conditions(self.get_current_player()):
+        current_player = self.get_current_player()
+        
+        if self.check_winning_conditions(current_player):
             return
 
         self.subturn_number += 1
         if self.subturn_number % len(self.players) == 0:
             self.turn_number += 1
 
-        for obj in self.get_current_player().game_objects:
+        for obj in current_player.game_objects:
             obj.move(self)
             obj.gain_hps()
 
@@ -214,23 +235,41 @@ class Game:
             obj.can_attack = True
             obj.is_selected = False
 
-        if self.check_winning_conditions(self.get_current_player()):
-            print(self.get_current_player().nation + ' won!')
+        if self.check_winning_conditions(current_player):
+            print(current_player.nation + ' won!')
+            # reward += 1000
             return
 
-        self.set_next_current_player()
+        # if isinstance(current_player, TrainableAI):
+        #     current_player.receive_reward(reward)
+
+        # ----------------------------------
+        # next player
+        current_player = self.set_next_current_player()
 
         self.logger.commit()
-        self.logger.start_turn(self.get_current_player().nation)
+        self.logger.start_turn(current_player.nation)
+
+        # get the rewards
+        if isinstance(current_player.ai, TrainableAI):
+            if self.turn_number != 1:  # then there has been at least 1 call of create_paths
+                                       # and the other players also finished their first turn
+                current_player.ai.receive_reward(current_player.reward)
+                current_player.reward = 0
 
         self.current_turn_text.update(turn_number=self.turn_number)
-        self.current_player_text.update(current_player=self.get_current_player().nation)
+        self.current_player_text.update(current_player=current_player.nation)
         self.update()
 
         # if now the player is AI, call create_paths method
         # and move units according to the paths
-        if self.get_current_player().is_ai:
-            self.get_current_player().create_paths()
+        if current_player.is_ai:
+            current_player.create_paths()
+
+        if self.autoplay and self._counter < 5:
+            self._counter += 1
+            self.next_turn()
+
 
     def mouse_motion(self, event):
         x, y = event.pos
@@ -269,6 +308,7 @@ class Game:
 
     def set_next_current_player(self):
         self._current_player_index = (self._current_player_index + 1) % len(self.players)
+        return self.get_current_player()
 
     def get_selected_unit(self):
         return next((u for u in self.get_current_player().units if u.is_selected), None)
@@ -276,7 +316,7 @@ class Game:
     def get_selected_city(self):
         return next((c for c in self.get_current_player().cities if c.is_selected), None)
 
-    def get_game_objects_on_hex(self, r, c, player=None, only_enemies=False, category=None, game_obj_type=None):
+    def get_game_objects_on_hex(self, r, c, player=None, only_enemies=False, role=None, game_obj_type=None):
         if player is not None and only_enemies:
             print('Use player and only_enemies simultaneously with caution')
 
@@ -288,8 +328,8 @@ class Game:
         if only_enemies:
             result = [(p, u) for p, u in result if self.is_enemy(p)]
 
-        if category is not None:
-            result = [(p, u) for p, u in result if u.category == category]
+        if role is not None:
+            result = [(p, u) for p, u in result if u.role == role]
 
         if game_obj_type is not None:
             result = [(p, u) for p, u in result if isinstance(u, game_obj_type)]
@@ -302,6 +342,8 @@ class Game:
     def left_button_pressed(self, event):
         # if self.check_winning_conditions(self.get_current_player()):
         #     return
+
+        self._counter = 0
 
         mouse_x, mouse_y = event.pos
 
@@ -336,17 +378,17 @@ class Game:
             for i, obj in enumerate(rc_objects):
                 obj.is_selected = (i == (selected_index + 1) % len(rc_objects))
 
-        selected_count = 0
-        selected = []
-        for obj in player.game_objects:
-            selected_count += int(obj.is_selected)
-            if obj.is_selected:
-                selected.append((obj.r, obj.c))
-
-        print(f'how many are selected?: {selected_count}')
-        if selected_count > 1:
-            print(selected)
-            print()
+        # selected_count = 0
+        # selected = []
+        # for obj in player.game_objects:
+        #     selected_count += int(obj.is_selected)
+        #     if obj.is_selected:
+        #         selected.append((obj.r, obj.c))
+        #
+        # print(f'how many are selected?: {selected_count}')
+        # if selected_count > 1:
+        #     print(selected)
+        #     print()
 
 
         self.update()
@@ -371,7 +413,7 @@ class Game:
         if r is None:
             return
 
-        # there is a unit of the same category on the hex
+        # there is a unit of the same role on the hex
         if len(self.get_game_objects_on_hex(r, c, player=current_player, game_obj_type=Unit)) > 0:  # TODO
             obj_selected.path = []
             self.update()
@@ -390,38 +432,8 @@ class Game:
                 obj_selected.path = []
                 return
 
-        self.set_allowed_shortest_path(obj_selected, r, c)
+        obj_selected.set_allowed_shortest_path(self, r, c)
         self.update()
-
-    def set_allowed_shortest_path(self, unit, to_r, to_c):
-        current_player = self.get_current_player()
-
-        disallowed_edges = set()
-        unit_allowed_hexes = self.map._graph.copy()
-        enemies = self.diplomacy.get_enemies(current_player)
-        for enemy in enemies:
-            for enemy_unit in enemy.game_objects:
-                adj_nodes = unit_allowed_hexes.adj[enemy_unit.r, enemy_unit.c].keys()
-
-                if enemy_unit.r == to_r and enemy_unit.c == to_c:
-                    disallowed_nodes = [x for x in adj_nodes
-                                        if len(unit_allowed_hexes.nodes[x]['game_objects']) > 0
-                                        if x != (unit.r, unit.c)]
-                else:
-                    disallowed_nodes = adj_nodes
-
-                disallowed_edges.update([(x, (enemy_unit.r, enemy_unit.c)) for x in disallowed_nodes])
-
-        for frm, to in disallowed_edges:
-            unit_allowed_hexes.remove_edge(frm, to)
-
-        frm = (unit.r, unit.c)
-        to = to_r, to_c
-
-        try:
-            unit.path = nx.shortest_path(unit_allowed_hexes, frm, to, weight='cost')
-        except nx.exception.NetworkXNoPath:
-            unit.path = []
 
     # @profile
     def right_button_released(self, mouse_x, mouse_y):
@@ -439,7 +451,7 @@ class Game:
         if r is None:
             return
 
-        # if there is a unit of the same category on the hex - cancel
+        # if there is a unit of the same role on the hex - cancel
         if len(self.get_game_objects_on_hex(r, c, player=current_player, game_obj_type=Unit)) > 0:  # TODO
             return
 
@@ -447,6 +459,7 @@ class Game:
         if (len(obj_selected.path) != 0 and (r, c) == obj_selected.path[-1]) \
                 or (obj_selected.get_ranged_target(self) is not None):
             obj_selected.move(self)
+            self.update()
 
             # check if the winning conditions holds
             if self.check_winning_conditions(self.get_current_player()):

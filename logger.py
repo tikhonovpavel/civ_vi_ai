@@ -2,11 +2,16 @@ import json
 import datetime
 from typing import Tuple, List
 
+from game_object import MilitaryObject
+
 
 class Event:
-    def __init__(self, unit_type, unit_location, event_type):
-        self.unit_type = unit_type
-        self.unit_location = unit_location
+    def __init__(self, obj, event_type):
+        self.category = obj.category
+        self.location = (obj.r, obj.c)
+        self.hp = obj.hp
+        self.mp = obj.mp
+        self.name = obj.name
         self.event_type = event_type
 
     def to_dict(self):
@@ -14,25 +19,24 @@ class Event:
 
 
 class MoveEvent(Event):
-    def __init__(self, unit_type: str, unit_location: Tuple[int, int], path: List[Tuple[int, int]]):
-        super().__init__(unit_type, unit_location, 'move')
+    def __init__(self, obj: MilitaryObject, path: List[Tuple[int, int]]):
+        super().__init__(obj, 'move')
         self.path = path
 
 
 class CombatAttackEvent(Event):
-    def __init__(self, unit_type: str, unit_location: Tuple[int, int], target_location: Tuple[int, int],
+    def __init__(self, obj: MilitaryObject, target: MilitaryObject,
                  unit_damage: int, enemy_damage: int):
-        super().__init__(unit_type, unit_location, 'combat_attack')
-        self.target_location = target_location
+        super().__init__(obj, 'combat_attack')
+        self.target = {'target': {'name': target.name, 'location': (target.r, target.c), 'category': target.category}}
         self.unit_damage = unit_damage
         self.enemy_damage = enemy_damage
 
 
 class RangedAttackEvent(Event):
-    def __init__(self, unit_type: str, unit_location: Tuple[int, int], target_location: Tuple[int, int],
-                 enemy_damage: int):
-        super().__init__(unit_type, unit_location, 'ranged_attack')
-        self.target_location = target_location
+    def __init__(self, obj: MilitaryObject, target: MilitaryObject, enemy_damage: int):
+        super().__init__(obj, 'ranged_attack')
+        self.target = {'name': target.name, 'location': (target.r, target.c), 'category': target.category}
         self.enemy_damage = enemy_damage
 
 
@@ -71,10 +75,10 @@ class Logger:
 
     def to_json(self):
         return json.dumps({
+            'turns': self.turns,
             'map_size': self.map_size,
             'map': self.map,
-            'initial_positions': self.initial_positions,
-            'turns': self.turns}, indent=2)
+            'initial_positions': self.initial_positions}, indent=2)
 
 # import datetime
 #

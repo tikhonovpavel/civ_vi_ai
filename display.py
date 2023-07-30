@@ -39,8 +39,7 @@ class Text:
 
         return self._fonts[setting]
 
-    # @profile
-    def text_to_screen(self, screen, text, x, y, size=50, bold=False, color=(200, 000, 000),
+    def _text_to_screen(self, screen, text, x, y, size=50, bold=False, color=(200, 000, 000),
                        font_family='Arial', alpha=255, align='left'):
         text = str(text)
 
@@ -57,6 +56,13 @@ class Text:
             screen.blit(self._texts[text], (x - text_width // 2, y))
         else:
             raise NotImplementedError()
+
+    # @profile
+    def text_to_screen(self, screen, text, x, y, size=50, bold=False, color=(200, 000, 000),
+                       font_family='Arial', alpha=255, align='left'):
+        for i, t in enumerate(text.split('\n')):
+            self._text_to_screen(screen, t, x, y + i * size, size, bold, color, font_family, alpha, align)
+
 
 
 class Display:
@@ -83,14 +89,14 @@ class Display:
     def update_all(self):
         pass
         self.screen.fill((255, 255, 255))
-
+        
         self._update_grid()
         self._update_units_and_cities()
         self._update_paths()
         self._update_ui()
-
+        
         self._print_grid_coords()
-
+        
         pygame.display.update()
 
     def _print_grid_coords(self):
@@ -213,13 +219,13 @@ class Display:
         pygame.draw.rect(
             self.screen,
             (255, 255, 255),
-            (50, 600, 500, 150),
+            (50, 600, 500, 175),
             width=0)
 
         pygame.draw.rect(
             self.screen,
             (0, 0, 0),
-            (50, 600, 500, 150),
+            (50, 600, 500, 175),
             width=2)
 
         unit = next((u for u in units if u.is_selected), None)
@@ -227,10 +233,10 @@ class Display:
             self.screen.blit(unit.image_ui, (55, 605))
 
             self.text_module.text_to_screen(self.screen,
-                                            f'HP: {unit.hp}\n MP: {unit.mp}',
+                                            f'{unit.name}\nHP: {unit.hp}\nMP: {unit.mp}',
                                             x=55,
-                                            y=605 + UI_UNIT_IMAGE_SIZE[1] + 5,
-                                            size=30)
+                                            y=605 + UI_UNIT_IMAGE_SIZE[1] + 1,
+                                            size=20)
 
             enemy_unit = self.game.get_current_player().enemy_unit
             if enemy_unit is None:
@@ -238,10 +244,10 @@ class Display:
 
             self.screen.blit(enemy_unit.image_ui, (405, 605))
             self.text_module.text_to_screen(self.screen,
-                                            f'HP: {enemy_unit.hp}\n MP: {enemy_unit.mp}',
+                                            f'{enemy_unit.name}\nHP: {enemy_unit.hp}\nMP: {enemy_unit.mp}',
                                             x=405,
-                                            y=605 + UI_UNIT_IMAGE_SIZE[1] + 5,
-                                            size=30)
+                                            y=605 + UI_UNIT_IMAGE_SIZE[1] + 1,
+                                            size=20)
 
         # self.game.next_turn_button.draw(self.screen, self.game, self.text_module)
         # self.game.show_moves_marker.draw(self.screen, self.game, self.text_module)

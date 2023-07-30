@@ -2,7 +2,7 @@ import pygame
 
 class Player:
 
-    def __init__(self, nation, ai=None) -> None:
+    def __init__(self, nation):
 
         self.nation = nation
         self.units = []
@@ -11,11 +11,16 @@ class Player:
         self.enemy_player = None
         self.enemy_unit = None
 
-        self.is_ai = ai is not None
-        self._ai = ai
+        self.ai = None#ai
 
         self.known_map = None # TODO: туман войны
         # self.ready_to_attack_hex = (None, None)
+
+        self.reward = 0
+
+    @property
+    def is_ai(self):
+        return self.ai is not None
 
     @property
     def game_objects(self):
@@ -25,7 +30,7 @@ class Player:
         if not self.is_ai:
             raise Exception('create_paths can be called only on AI players')
 
-        self._ai.create_paths(self)
+        self.ai.create_paths()
 
     def add_unit(self, unit_type, r, c):
         unit = unit_type(self, r, c)
@@ -39,6 +44,8 @@ class Player:
         return city
 
     def destroy(self, game, game_object):
+        game_object.hp = 0
+
         if game_object in self.units:
             game.map.remove(game_object.r, game_object.c, game_object)
             self.units.remove(game_object)
