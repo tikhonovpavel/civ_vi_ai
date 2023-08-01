@@ -7,8 +7,10 @@ from ui import ButtonStates
 from game import Game
 
 # Set the dimensions of the screen
+from unit import Units
+
 SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 800
+SCREEN_HEIGHT = 900
 
 
 @profile
@@ -42,22 +44,29 @@ def main():
                     game.left_button_pressed(event)
 
                 if event.button == 2: # 2 == middle button
-                    tile_coord = game.map.get_grid_coords(*event.pos)
-                    print(tile_coord)
 
                     # res = game.map.get(*tile_coord).game_objects[0].get_reachable_cells(game)
                     # for tile_coord in res:
-                    #     if tile_coord not in game.players[0].cities[0].tiles_set:
-                    #         game.players[0].cities[0].tiles_set.add(tile_coord)
+                    #     if tile_coord not in game.players[0].cities[0].territory:
+                    #         game.players[0].cities[0].territory.add(tile_coord)
                     #     else:
-                    #         game.players[0].cities[0].tiles_set.remove(tile_coord)
+                    #         game.players[0].cities[0].territory.remove(tile_coord)
 
 
+                    try:
+                        tile_coord = game.map.get_grid_coords(*event.pos)
+                        print(tile_coord)
+                    #
+                        player = game.players[0]
+                        # game.add_game_obj(player, Units.Tank(player, *tile_coord))
 
-                    # if tile_coord not in game.players[0].cities[0].tiles_set:
-                    #     game.players[0].cities[0].tiles_set.add(tile_coord)
-                    # else:
-                    #     game.players[0].cities[0].tiles_set.remove(tile_coord)
+                        if tile_coord not in player.cities[0].territory:
+                            player.cities[0].territory.add(tile_coord)
+                        else:
+                            player.cities[0].territory.remove(tile_coord)
+                    except:
+                        pass
+
                     game.update()
 
                 if event.button == 3:  # 3 == right button

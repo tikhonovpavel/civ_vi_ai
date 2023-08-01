@@ -1,5 +1,9 @@
 import pygame
 
+from city import City
+from unit import Unit
+
+
 class Player:
 
     def __init__(self, nation):
@@ -32,16 +36,22 @@ class Player:
 
         self.ai.create_paths()
 
-    def add_unit(self, unit_type, r, c):
-        unit = unit_type(self, r, c)
-        self.units.append(unit)
+    # def add_unit(self, unit_type, r, c):
+    #     unit = unit_type(self, r, c)
+    #     self.units.append(unit)
+    #
+    #     return unit
 
-        return unit
+    def add_game_obj(self, game_obj):
 
-    def add_city(self, city):
-        self.cities.append(city)
+        if isinstance(game_obj, Unit):
+            self.units.append(game_obj)
+        elif isinstance(game_obj, City):
+            self.cities.append(game_obj)
+        else:
+            raise NotImplementedError()
 
-        return city
+        return game_obj
 
     def destroy(self, game, game_object):
         game_object.hp = 0

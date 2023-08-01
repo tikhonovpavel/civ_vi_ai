@@ -12,12 +12,12 @@ class City(MilitaryObject):
     MAX_HP = 200
     MAX_WALLS_HP = 100
 
-    def __init__(self, name, player, center_r, center_c, tiles_set, image_path):
+    def __init__(self, name, player, center_r, center_c, territory, hp=None, image_path='assets/city_icon1.png'):
         super().__init__(name, 'city', player, center_r, center_c, role=MilitaryObject.RANGED,
-                         mp_base=0, combat_strength_base=95, ranged_strength_base=95, range_radius_base=2,
+                         mp_base=0, hp=hp, combat_strength_base=95, ranged_strength_base=95, range_radius_base=2,
                          sound_attack='assets/sounds/artillery_attack.ogg')
 
-        assert center_r, center_c in tiles_set
+        assert center_r, center_c in territory
 
         # self.name = name
         self.r = center_r
@@ -29,24 +29,24 @@ class City(MilitaryObject):
         self.image = pygame.transform.scale(image, self.DEFAULT_CITY_IMAGE_SIZE)
         self.image_ui = pygame.transform.scale(image, UI_CITY_IMAGE_SIZE)
 
-        self.hp = City.MAX_HP
+        self.hp = City.MAX_HP if hp is None else hp
         self.walls_hp = City.MAX_WALLS_HP
 
-        self._tiles_set = tiles_set
+        self._territory = territory
 
     @property
-    def tiles_set(self):
-        return self._tiles_set
+    def territory(self):
+        return self._territory
 
     def gain_hps(self):
         self.hp = min(200, self.hp + 15)
 
-    @tiles_set.setter
-    def tiles_set(self, tiles_set):
-        self._tiles_set = tiles_set
+    @territory.setter
+    def territory(self, value):
+        self._territory = value
 
     def is_cell_inside(self, r, c):
-        return next((True for tile in self._tiles_set if tile == (r, c)), False)
+        return next((True for tile in self._territory if tile == (r, c)), False)
 
     def combat_attack(self, game, enemy_r, enemy_c):
         raise NotImplementedError()

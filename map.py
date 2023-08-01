@@ -19,25 +19,28 @@ class TerrainType:
         self.cost = cost
 
 
-class TerrainTypes:
-    PLAINS = TerrainType('plains', 'assets/tiles/plains.png', cost=1)
-    HILLS = TerrainType('hills', 'assets/tiles/hills.png', cost=2)
-    FOREST = TerrainType('forest', 'assets/tiles/forest.png', cost=2)
-    # SNOW =
-    # TUNDRA =
-    # MOUNTAIN =
-    # WATER_COAST =
-    # WATER_OCEAN =
+terrain_types = {'plains': TerrainType('plains', 'assets/tiles/plains.png', cost=1),
+                 'hills': TerrainType('hills', 'assets/tiles/hills.png', cost=2),
+                 'forest': TerrainType('forest', 'assets/tiles/forest.png', cost=2),
+                 # SNOW =
+                 # TUNDRA =
+                 # MOUNTAIN =
+                 # WATER_COAST =
+                 # WATER_OCEAN =
+                 }
 
 
 class Tile:
-    def __init__(self, x, y) -> None:
+    def __init__(self, x, y, terrain=None) -> None:
         self.x = x
         self.y = y
 
-        self.terrain = TerrainTypes.PLAINS
-        # self.terrain = random.choices([TerrainTypes.PLAINS, TerrainTypes.HILLS, TerrainTypes.FOREST],
-        #                               [0.5, 0.25, 0.25], k=1)[0]
+        # self.terrain = TerrainTypes.PLAINS
+
+        if terrain is None:
+            self.terrain = random.choices(terrain_types.values(), [0.5, 0.25, 0.25], k=1)[0]
+        else:
+            self.terrain = terrain_types[terrain]
         
         self.points = []
         
@@ -55,7 +58,7 @@ class Map:
             self.game_objects = game_objects
             self.geometry = tile
 
-    def __init__(self, rows, columns, offset_x=50, offset_y=50) -> None:
+    def __init__(self, rows, columns, offset_x=50, offset_y=50, terrains=None) -> None:
 
         self.n_rows = rows
         self.n_columns = columns
@@ -71,10 +74,12 @@ class Map:
             row = []
             
             for c in range(columns):
+                terrain = None if terrains is None else terrains[r][c]
+
                 if r % 2 == 0:
-                    row.append(Tile(3 * radius * c + offset_x, side * r + offset_y))
+                    row.append(Tile(3 * radius * c + offset_x, side * r + offset_y, terrain))
                 else:
-                    row.append(Tile(1.5 * radius * (c * 2 + 1) + offset_x, side * r + offset_y))
+                    row.append(Tile(1.5 * radius * (c * 2 + 1) + offset_x, side * r + offset_y, terrain))
 
                 self._graph.add_node((r, c), game_objects=self._default_value())
                 # print(self._graph[(r, c)]['game_objects'])
@@ -122,11 +127,24 @@ class Map:
 
         return nx.shortest_path_length(graph, from_rc, to_rc, weight=weight)
 
-    def get_neighbours_grid_coords(self, r, c):
-        if r % 2 == 0:
-            result = [(r + 1, c), (r + 2, c), (r + 1, c - 1), (r - 1, c - 1), (r - 2, c), (r - 1, c)]
+    def get_neighbours_grid_coords(self, r, c, radius=1):
+
+        if radius == 1:
+            if r % 2 == 0:
+                result = [(r + 1, c), (r + 2, c), (r + 1, c - 1), (r - 1, c - 1), (r - 2, c), (r - 1, c)]
+            else:
+                result = [(r + 1, c + 1), (r + 2, c), (r + 1, c), (r - 1, c), (r - 2, c), (r - 1, c + 1)]
+        elif radius == 2:
+            if r % 2 == 0:
+                result = [(r + 1, c), (r + 2, c), (r + 1, c - 1), (r - 1, c - 1), (r - 2, c), (r - 1, c),
+                          (r + 2, c + 1), (r + 3, c), (r + 4, c), (r + 3, c - 1), (r + 2, c - 1), (r, c - 1),
+                          (r - 2, c - 1), (r - 3, c - 1), (r - 4, c), (r - 3, c), (r - 2, c + 1), (r, c + 1), ]
+            else:
+                result = [(r + 1, c + 1), (r + 2, c), (r + 1, c), (r - 1, c), (r - 2, c), (r - 1, c + 1),
+                          (r + 2, c + 1), (r + 3, c + 1), (r + 4, c), (r + 3, c), (r + 2, c - 1), (r, c - 1),
+                          (r - 2, c - 1), (r - 3, c), (r - 4, c), (r - 3, c + 1), (r - 2, c + 1), (r, c + 1), ]
         else:
-            result = [(r + 1, c + 1), (r + 2, c), (r + 1, c), (r - 1, c), (r - 2, c), (r - 1, c + 1)]
+            raise NotImplementedError()
 
         result = [(row, col) if 0 <= row < self.n_rows and 0 <= col < self.n_columns else None for row, col in result]
 

@@ -68,7 +68,7 @@ names = {
 
 class Unit(MilitaryObject):
     def __init__(self, category, player, r, c, role, image_path,
-                 mp_base, combat_strength_base, ranged_strength_base, range_radius_base,
+                 mp_base, combat_strength_base, ranged_strength_base, range_radius_base, hp=None, path=None,
                  modifiers=None, sound_attack=None, sound_movement=None, name=None) -> None:
 
         if name is None:
@@ -76,7 +76,7 @@ class Unit(MilitaryObject):
 
         super().__init__(name, category, player, r, c, role, mp_base, combat_strength_base,
                          ranged_strength_base=ranged_strength_base,
-                         range_radius_base=range_radius_base, modifiers=modifiers,
+                         range_radius_base=range_radius_base, modifiers=modifiers, hp=hp, path=path,
                          sound_attack=sound_attack, sound_movement=sound_movement)
         self.image_path = image_path
 

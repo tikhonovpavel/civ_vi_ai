@@ -7,14 +7,16 @@ from line_profiler_pycharm import profile
 
 
 class MilitaryObject:
-    RANGED = 31
-    COMBAT = 32
-    NAVY = 33
+    RANGED = 'ranged'
+    COMBAT = 'combat'
+    NAVY = 'navy'
 
     def __init__(self, name, category, player, r, c, role, mp_base,
-                 combat_strength_base, ranged_strength_base, range_radius_base,
-                 modifiers=None, sound_attack=None, sound_movement=None):
-        self.path = []
+                 combat_strength_base, ranged_strength_base, range_radius_base, hp=None,
+                 modifiers=None, path=None, sound_attack=None, sound_movement=None):
+
+        self.path = [] if path is None else path
+
         self.can_attack = True
 
         self.name = name
@@ -31,21 +33,40 @@ class MilitaryObject:
 
         self._combat_strength_base = combat_strength_base
 
-        self.hp = random.randint(50, 100)
+        self.hp = random.randint(50, 100) if hp is None else hp
 
         self.mp = mp_base
         self.mp_base = mp_base
 
         self.modifiers = modifiers
 
-        self.sound_attack = pygame.mixer.Sound(sound_attack) if sound_attack else None
-        self.sound_movement = pygame.mixer.Sound(sound_movement) if sound_movement else None
+        sound_attack = sound_attack if sound_attack else f'assets/sounds/{category}_attack.ogg'
+        self.sound_attack = pygame.mixer.Sound(sound_attack)
+
+        # sound_movement = sound_attack if sound_attack else f'assets/sounds/{category}_movement.ogg'
+        # self.sound_movement = pygame.mixer.Sound(sound_movement)
 
         self.is_selected = False
 
     @property
     def player(self):
         return self._player
+
+    @property
+    def coords(self):
+        return self.r, self.c
+
+    @property
+    def range_radius_base(self):
+        return self._range_radius_base
+
+    @property
+    def ranged_strength_base(self):
+        return self._ranged_strength_base
+
+    @property
+    def combat_strength_base(self):
+        return self._combat_strength_base
 
     def gain_hps(self):
         raise NotImplementedError()

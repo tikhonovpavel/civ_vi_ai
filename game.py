@@ -52,77 +52,53 @@ class Game:
     # @log("Start new game")
     @profile
     def __init__(self, screen, clock) -> None:
-        self.map = Map(30, 15)
 
         # player1 = Player('Rome')
-        player1 = Player('Rome')
-        player1.ai = SimpleAI(self, player1)
-
-        player2 = Player('Egypt')
-        player2.ai = PolicyGradientAI(self, player2)
+        # player1.ai = SimpleAI(self, player1)
+        #
+        # player2 = Player('Egypt')
+        # player2.ai = PolicyGradientAI(self, player2)
 
         # player2 = Player('Egypt', ai=DoNothingAI(self))
         # player2 = Player('Egypt', ai=SimpleAI(self))
-        player3 = Player('Babylon')
-        player3.ai = SimpleAIHikikomori(self, player3)
+        # player3 = Player('Babylon')
+        # player3.ai = SimpleAIHikikomori(self, player3)
 
-        self.players = [player1, player2, player3]
+        # self.players = [player1, player2, player3]
 
         self._counter = 0
 
-        with open('init_state.json', 'r', encoding='utf-8') as f:
+        self.players = []
+        with open('init_states/1vs1_easy2.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
-            for p in config:
+            self.map = Map(16, 5, terrains=config['map'])
+
+            for p in config['players']:
+                player = Player(p['nation'])
+
+                if p['ai']:
+                    player.ai = globals()[p['ai']](self, player)
+
+                self.players.append(player)
+
+                # player = self.get_player_by_nation(p['nation'])
+
                 for c in p['cities']:
-                    coords = set(tuple(x) for x in c['coords'])
+                    territory = set(tuple(x) for x in c['territory'])
+                    assert tuple(c['center']) in territory
+                    city = City(c['name'], player, *c['center'], territory)
+                    try:
+                        self.add_game_obj(player, city)
+                    except:
+                        pass
 
-                    assert tuple(c['center']) in coords
-
-                    player = self.get_player_by_nation(p['nation'])
-
-                    city = City(c['name'], player, *c['center'], coords, 'assets/city_icon1.png')
-                    city.tiles_set = coords
-
-                    self.add_city(player, city)
-
-        self.add_unit(player1, Units.Tank, 4, 1)
-        self.add_unit(player1, Units.Tank, 4, 3)
-        self.add_unit(player1, Units.Tank, 4, 4)
-        self.add_unit(player1, Units.Tank, 1, 4)
-        self.add_unit(player1, Units.Tank, 5, 3)
-        self.add_unit(player1, Units.Tank, 8, 3)
-        self.add_unit(player1, Units.Tank, 7, 2)
-        self.add_unit(player1, Units.Tank, 7, 1)
-        self.add_unit(player1, Units.Tank, 9, 11)
-        self.add_unit(player1, Units.Artillery, 10, 2)
-        self.add_unit(player1, Units.Artillery, 8, 1)
-        self.add_unit(player1, Units.Artillery, 10, 1)
-        self.add_unit(player1, Units.Artillery, 3, 2)
-
-
-
-        self.add_unit(player2, Units.Tank, 10, 4).hp = 10
-
-        self.add_unit(player2, Units.Tank, 25, 10)
-        self.add_unit(player2, Units.Tank, 25, 12)
-        self.add_unit(player2, Units.Tank, 25, 11)
-        self.add_unit(player2, Units.Tank, 28, 12)
-        self.add_unit(player2, Units.Tank, 20, 12)
-        self.add_unit(player2, Units.Tank, 21, 12)
-        self.add_unit(player2, Units.Tank, 24, 13)
-        self.add_unit(player2, Units.Tank, 23, 13)
-        self.add_unit(player2, Units.Tank, 25, 13)
-        self.add_unit(player2, Units.Artillery, 27, 11)
-        self.add_unit(player2, Units.Artillery, 27, 13)
-        self.add_unit(player2, Units.Artillery, 27, 14)
-        self.add_unit(player2, Units.Artillery, 27, 12)
-
-        self.add_unit(player3, Units.Artillery, 15, 7)
-        self.add_unit(player3, Units.Tank, 14, 7)
-        # self.add_unit(player3, Units.Tank, 14, 8)
-        # self.add_unit(player3, Units.Tank, 16, 7)
-        self.add_unit(player3, Units.Tank, 16, 8)
+                for u in p['units']:
+                    u['player'] = player
+                    mp = u.pop('mp')
+                    unit = Unit(**u)
+                    unit.mp = mp
+                    self.add_game_obj(player, unit)
 
         self._current_player_index = 0
 
@@ -133,13 +109,14 @@ class Game:
         self.save_state_button = Button('Save state', 800, 632, 150, 70, self.save_state)
         self.quick_movement_marker = Marker('Quick movement', 770, 720, state=True, click_function=self.update)
         self.sound_marker = Marker('Sound', 770, 720+35, state=True, click_function=self.update)
+        self.autoplay_marker = Marker('Autoplay', 770, 720+35*2, state=False, click_function=self.update)
         self.current_turn_text = Text('Turn: {turn_number}', 550, 690, 1, 1)
         self.current_player_text = Text("({current_player}'s turn)", 550, 730, 1, 1)
-        self.autoplay = True
+
 
         self.ui = UI([self.next_turn_button, self.save_state_button,
-                      self.quick_movement_marker, self.sound_marker, self.current_turn_text,
-                      self.current_player_text, ])
+                      self.quick_movement_marker, self.sound_marker, self.autoplay_marker,
+                      self.current_turn_text, self.current_player_text, ])
 
         self.unit_selected_sound = pygame.mixer.Sound('assets/sounds/select_unit.ogg')
         self.city_selected_sound = pygame.mixer.Sound('assets/sounds/select_unit.ogg')
@@ -184,26 +161,29 @@ class Game:
         return next(p for p in self.players if p.nation == nation)
 
     def save_state(self):
-        result = []
+        result = {'map': self.map.get_terrains_map(),
+                  'players': []}
 
         for player in self.players:
-            res = {'nation': player.nation, 'cities': []}
+            res = {'nation': player.nation,
+                   'cities': [],
+                   'ai': player.ai.__class__.__name__ if player.is_ai else None}
 
             for city in player.cities:
                 res['cities'].append({'name': city.name,
                                       'center': [city.r, city.c],
-                                      'coords': list(city.tiles_set)})
+                                      'territory': list(city.territory)}, )
 
             res['units'] = []
             for unit in player.units:
-                fields = ['name', 'r', 'c', 'role', 'sub_role',
-                          'mp', 'hp', 'image_path', 'mb_base', 'ranged_strength_base',
+                fields = ['name', 'r', 'c', 'category', 'role', 'sub_role',
+                          'mp', 'hp', 'image_path', 'mp_base', 'ranged_strength_base',
                           'range_radius_base', 'combat_strength_base', 'path']
                 unit_json = {k: v for k, v in unit.__dict__.items() if k in fields}
 
                 res['units'].append(unit_json)
 
-            result.append(res)
+            result['players'].append(res)
 
         current_datetime = datetime.now()
         formatted_datetime = current_datetime.strftime("%Y-%m-%d %H-%M-%S")
@@ -212,8 +192,9 @@ class Game:
                   ensure_ascii=False, indent=2)
 
     def check_winning_conditions(self, player):
-        total_cities_n = sum(len(p.cities) for p in self.players)
-        return len(player.cities) == total_cities_n
+        return False
+        # total_cities_n = sum(len(p.cities) for p in self.players)
+        # return len(player.cities) == total_cities_n
 
     # @log("Clicked next turn")
     @profile
@@ -266,10 +247,11 @@ class Game:
         if current_player.is_ai:
             current_player.create_paths()
 
-        if self.autoplay and self._counter < 5:
-            self._counter += 1
+        if self.autoplay_marker.state and self._autoplay_turns_counter < 5:
+            self._autoplay_turns_counter += 1
             self.next_turn()
-
+        # else:
+        #     self.autoplay_marker.click()#.state = False
 
     def mouse_motion(self, event):
         x, y = event.pos
@@ -281,24 +263,15 @@ class Game:
         if rb:
             self.right_button_pressed(*event.pos)
 
-    def add_unit(self, player, unit_type, r, c):
+    def add_game_obj(self, player, game_obj):
         assert player in self.players
 
-        unit = player.add_unit(unit_type, r, c)
+        r, c = game_obj.r, game_obj.c
+        self.map.set(r, c, self.map.get(r, c).game_objects + [game_obj])
+        player.add_game_obj(game_obj)
 
-        self.map.set(r, c, self.map.get(r, c).game_objects + [unit])
+        return game_obj
 
-        return unit
-
-    def add_city(self, player, city):
-        assert player in self.players
-
-        r, c = city.r, city.c
-
-        player.add_city(city)
-        self.map.set(r, c, self.map.get(r, c).game_objects + [city])
-
-        return city
 
     def is_enemy(self, other_player):
         return bool(self.diplomacy.is_enemies(self.get_current_player(), other_player))
@@ -343,7 +316,7 @@ class Game:
         # if self.check_winning_conditions(self.get_current_player()):
         #     return
 
-        self._counter = 0
+        self._autoplay_turns_counter = 0
 
         mouse_x, mouse_y = event.pos
 

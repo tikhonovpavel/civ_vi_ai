@@ -7,9 +7,10 @@ import pygame
 # import game
 from city import City
 from consts import DEFAULT_TERRAIN_IMAGE_SIZE, BLACK, UI_UNIT_IMAGE_SIZE
+from map import terrain_types
 from nations import Nations
 from ui import ButtonStates
-from map import TerrainTypes
+# from map import TerrainTypes
 
 from line_profiler_pycharm import profile
 
@@ -20,9 +21,7 @@ class Image:
     def __init__(self):
         self.nations = ...
         self.units = ...
-        self.tiles = {k.image_path: pygame.image.load(k.image_path) for k in [TerrainTypes.FOREST,
-                                                                              TerrainTypes.HILLS,
-                                                                              TerrainTypes.PLAINS]}
+        self.tiles = {k.image_path: pygame.image.load(k.image_path) for k in terrain_types.values()}
 
 
 class Text:
@@ -128,7 +127,7 @@ class Display:
         # Coloring countries territory
         for player in self.game.players:
             for city in player.cities:
-                for tile_coord in city.tiles_set:
+                for tile_coord in city.territory:
                     geom = self.game.map.get(*tile_coord).geometry
 
                     # borders
