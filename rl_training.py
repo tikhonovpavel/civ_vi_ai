@@ -138,7 +138,7 @@ class PolicyGradientAI(TrainableAI):
     #     return action
 
     @profile
-    def update_policy(self, gamma=0.99):
+    def update_policy(self, gamma=0.98):
         print(f'update policy. Rewards: {self.rewards}')
 
         returns = []
@@ -347,11 +347,12 @@ class PolicyGradientAI(TrainableAI):
                 # print(unit.name)
 
             while unit.mp != 0 and unit.hp > 0:
-                try:
-                    action_logits = self.policy_network(input_tensor[i].unsqueeze(0))
-                except Exception as err:
-                    self.create_input_tensor().to(self.device)
-                    raise err
+                action_logits = self.policy_network(input_tensor[i].unsqueeze(0))
+                # try:
+                #     action_logits = self.policy_network(input_tensor[i].unsqueeze(0))
+                # except Exception as err:
+                #     self.create_input_tensor().to(self.device)
+                #     raise err
 
                 all_neighbour_cells = self.game.map.get_neighbours_grid_coords(unit.r, unit.c, radius=2)
                 nearest_neighbours = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)
@@ -385,7 +386,7 @@ class PolicyGradientAI(TrainableAI):
                     target_coords = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)[chosen_action]
 
                     if target_coords == unit_init_coords:
-                        player.reward += rewards_values.RETURNED_TO_THE_INIT_POSITION
+                        player.add_reward(rewards_values.RETURNED_TO_THE_INIT_POSITION)
                 else:
                     # just stay where we are x2
                     print(f'{count + 1}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'

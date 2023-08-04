@@ -1,4 +1,5 @@
 # from line_profiler_pycharm import profile
+import json
 
 import pygame
 from line_profiler_pycharm import profile
@@ -6,23 +7,23 @@ from line_profiler_pycharm import profile
 from ui import ButtonStates
 from game import Game
 
-# Set the dimensions of the screen
-from unit import Units
-
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 900
 
 
 @profile
 def main():
-    # Initialize Pygame
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     screen.fill((255, 255, 255))
     clock = pygame.time.Clock()
     clock.tick(60)
 
-    game = Game(screen, clock)
+    with open('init_states/1vs1_easy2.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
+
+    game = Game(config, screen, clock)
+    game.start()
 
     # Run the game loop
     running = True
@@ -52,11 +53,10 @@ def main():
                     #     else:
                     #         game.players[0].cities[0].territory.remove(tile_coord)
 
-
                     try:
                         tile_coord = game.map.get_grid_coords(*event.pos)
                         print(tile_coord)
-                    #
+
                         player = game.players[0]
                         # game.add_game_obj(player, Units.Tank(player, *tile_coord))
 
@@ -76,10 +76,6 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
 
                 if event.button == 3:
-                    ...
-                    # print('rb released')
-                    # game.right_button_pressed(*event.pos)
-
                     game.right_button_released(*event.pos)
 
         game.display.update_texts()

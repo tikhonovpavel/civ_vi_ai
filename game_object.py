@@ -12,7 +12,7 @@ class MilitaryObject:
     NAVY = 'navy'
 
     def __init__(self, name, category, player, r, c, role, mp_base,
-                 combat_strength_base, ranged_strength_base, range_radius_base, hp=None,
+                 combat_strength_base, ranged_strength_base, range_radius_base, hp=None, mp=None,
                  modifiers=None, path=None, sound_attack=None, sound_movement=None):
 
         self.path = [] if path is None else path
@@ -35,13 +35,21 @@ class MilitaryObject:
 
         self.hp = random.randint(50, 100) if hp is None else hp
 
-        self.mp = mp_base
+        if mp is None:
+            self.mp = mp_base
+        else:
+            self.mp = mp_base
+
         self.mp_base = mp_base
 
         self.modifiers = modifiers
 
         sound_attack = sound_attack if sound_attack else f'assets/sounds/{category}_attack.ogg'
-        self.sound_attack = pygame.mixer.Sound(sound_attack)
+
+        try:
+            self.sound_attack = pygame.mixer.Sound(sound_attack)
+        except pygame.error:
+            pass
 
         # sound_movement = sound_attack if sound_attack else f'assets/sounds/{category}_movement.ogg'
         # self.sound_movement = pygame.mixer.Sound(sound_movement)

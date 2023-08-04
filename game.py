@@ -3,6 +3,7 @@ from datetime import datetime
 from itertools import dropwhile
 
 import pygame
+import torch
 from line_profiler_pycharm import profile
 
 import networkx as nx
@@ -51,7 +52,10 @@ class Game:
 
     # @log("Start new game")
     @profile
-    def __init__(self, screen, clock) -> None:
+    def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=5,) -> None:
+
+
+        self._is_started = False
 
         # player1 = Player('Rome')
         # player1.ai = SimpleAI(self, player1)
@@ -67,37 +71,35 @@ class Game:
         # self.players = [player1, player2, player3]
 
         self._counter = 0
+        self.autoplay_max_turns = autoplay_max_turns
+        self._autoplay_turns_counter = 0
 
         self.players = []
-        with open('init_states/1vs1_easy2.json', 'r', encoding='utf-8') as f:
-            config = json.load(f)
 
-            self.map = Map(16, 5, terrains=config['map'])
+        self.map = Map(16, 5, terrains=config['map'])
 
-            for p in config['players']:
-                player = Player(p['nation'])
+        for p in config['players']:
+            player = Player(p['nation'])
 
-                if p['ai']:
-                    player.ai = globals()[p['ai']](self, player)
+            if p['ai']:
+                player.ai = globals()[p['ai']](self, player)
 
-                self.players.append(player)
+            self.players.append(player)
 
-                # player = self.get_player_by_nation(p['nation'])
+            # player = self.get_player_by_nation(p['nation'])
 
-                for c in p['cities']:
-                    territory = set(tuple(x) for x in c['territory'])
-                    assert tuple(c['center']) in territory
-                    city = City(c['name'], player, *c['center'], territory)
-                    try:
-                        self.add_game_obj(player, city)
-                    except:
-                        pass
+            for c in p['cities']:
+                territory = set(tuple(x) for x in c['territory'])
+                assert tuple(c['center']) in territory
+                city = City(c['name'], player, *c['center'], territory)
+                try:
+                    self.add_game_obj(player, city)
+                except:
+                    pass
 
                 for u in p['units']:
                     u['player'] = player
-                    mp = u.pop('mp')
                     unit = Unit(**u)
-                    unit.mp = mp
                     self.add_game_obj(player, unit)
 
         self._current_player_index = 0
@@ -108,8 +110,8 @@ class Game:
         self.next_turn_button = Button('Next turn', 570, 632, 150, 70, self.next_turn)
         self.save_state_button = Button('Save state', 800, 632, 150, 70, self.save_state)
         self.quick_movement_marker = Marker('Quick movement', 770, 720, state=True, click_function=self.update)
-        self.sound_marker = Marker('Sound', 770, 720+35, state=True, click_function=self.update)
-        self.autoplay_marker = Marker('Autoplay', 770, 720+35*2, state=False, click_function=self.update)
+        self.sound_marker = Marker('Sound', 770, 720+35, state=sound_on, click_function=self.update)
+        self.autoplay_marker = Marker('Autoplay', 770, 720+35*2, state=autoplay, click_function=self.update)
         self.current_turn_text = Text('Turn: {turn_number}', 550, 690, 1, 1)
         self.current_player_text = Text("({current_player}'s turn)", 550, 730, 1, 1)
 
@@ -118,8 +120,12 @@ class Game:
                       self.quick_movement_marker, self.sound_marker, self.autoplay_marker,
                       self.current_turn_text, self.current_player_text, ])
 
-        self.unit_selected_sound = pygame.mixer.Sound('assets/sounds/select_unit.ogg')
-        self.city_selected_sound = pygame.mixer.Sound('assets/sounds/select_unit.ogg')
+        try:
+            self.unit_selected_sound = pygame.mixer.Sound('assets/sounds/select_unit.ogg')
+            self.city_selected_sound = pygame.mixer.Sound('assets/sounds/select_unit.ogg')
+        except pygame.error:
+            self.unit_selected_sound = None
+            self.city_selected_sound = None
 
         # all vs all
         self.diplomacy = Diplomacy(self.players)
@@ -140,13 +146,18 @@ class Game:
         self.current_player_text.update(current_player=self.players[0].nation)
         self.update()
 
+    @property
+    def is_started(self):
+        return self._is_started
+
+    def start(self):
+        self._is_started = True
         self.logger.start_turn(self.get_current_player().nation)
 
-        # pgai = PolicyGradientAI(self)
-        # pgai.create_paths()
-        # convert_map_to_tensor(self, player1)
-
-
+        current_player = self.get_current_player()
+        if self.autoplay_marker.state and current_player.is_ai:
+            current_player.create_paths()
+            self.next_turn()
 
     def _get_initial_positions_string(self):
         result = []
@@ -192,13 +203,15 @@ class Game:
                   ensure_ascii=False, indent=2)
 
     def check_winning_conditions(self, player):
-        return False
-        # total_cities_n = sum(len(p.cities) for p in self.players)
-        # return len(player.cities) == total_cities_n
+        # return False
+        total_cities_n = sum(len(p.cities) for p in self.players)
+        return len(player.cities) == total_cities_n
 
-    # @log("Clicked next turn")
     @profile
     def next_turn(self):
+        if not self.is_started:
+            raise Exception('Ensure you\'ve called game.start() at the initialization stage')
+
         current_player = self.get_current_player()
         
         if self.check_winning_conditions(current_player):
@@ -236,7 +249,7 @@ class Game:
             if self.turn_number != 1:  # then there has been at least 1 call of create_paths
                                        # and the other players also finished their first turn
                 current_player.ai.receive_reward(current_player.reward)
-                current_player.reward = 0
+                current_player.reset_reward()
 
         self.current_turn_text.update(turn_number=self.turn_number)
         self.current_player_text.update(current_player=current_player.nation)
@@ -247,11 +260,11 @@ class Game:
         if current_player.is_ai:
             current_player.create_paths()
 
-        if self.autoplay_marker.state and self._autoplay_turns_counter < 5:
+        if self.autoplay_marker.state and self._autoplay_turns_counter < self.autoplay_max_turns:
             self._autoplay_turns_counter += 1
             self.next_turn()
-        # else:
-        #     self.autoplay_marker.click()#.state = False
+        else:
+            self._autoplay_turns_counter = 0
 
     def mouse_motion(self, event):
         x, y = event.pos
@@ -316,7 +329,6 @@ class Game:
         # if self.check_winning_conditions(self.get_current_player()):
         #     return
 
-        self._autoplay_turns_counter = 0
 
         mouse_x, mouse_y = event.pos
 

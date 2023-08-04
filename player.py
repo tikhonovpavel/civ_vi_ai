@@ -20,7 +20,9 @@ class Player:
         self.known_map = None # TODO: туман войны
         # self.ready_to_attack_hex = (None, None)
 
-        self.reward = 0
+        self._reward = 0
+
+        self._reward_cum = 0
 
     @property
     def is_ai(self):
@@ -29,6 +31,26 @@ class Player:
     @property
     def game_objects(self):
         return self.units + self.cities
+
+    @property
+    def reward(self):
+        return self._reward
+
+    @property
+    def reward_cum(self):
+        return self._reward_cum
+
+    def add_reward(self, value):
+        self._reward += value
+        self._reward_cum += value
+
+    def reset_reward(self):
+        self._reward = 0
+
+    #
+    # @reward.setter
+    # def reward(self, value):
+    #     self._reward = value
 
     def create_paths(self):
         if not self.is_ai:

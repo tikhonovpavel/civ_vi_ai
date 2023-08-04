@@ -86,7 +86,9 @@ class Display:
 
     @profile
     def update_all(self):
-        pass
+        if self.screen is None:
+            return
+
         self.screen.fill((255, 255, 255))
         
         self._update_grid()
@@ -252,6 +254,9 @@ class Display:
         # self.game.show_moves_marker.draw(self.screen, self.game, self.text_module)
 
     def update_texts(self):
+        if self.screen is None:
+            return
+
         to_delete = []
 
         for i in range(len(self.damage_texts)):
@@ -287,6 +292,9 @@ class Display:
             head_width: int = 15,
             head_height: int = 15,
     ):
+        if self.screen is None:
+            return
+
         arrow = start - end
         angle = arrow.angle_to(pygame.Vector2(0, -1))
         body_length = arrow.length() - head_height

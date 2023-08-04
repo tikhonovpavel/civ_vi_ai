@@ -68,7 +68,7 @@ names = {
 
 class Unit(MilitaryObject):
     def __init__(self, category, player, r, c, role, image_path,
-                 mp_base, combat_strength_base, ranged_strength_base, range_radius_base, hp=None, path=None,
+                 mp_base, combat_strength_base, ranged_strength_base, range_radius_base, hp=None, mp=None, path=None,
                  modifiers=None, sound_attack=None, sound_movement=None, name=None) -> None:
 
         if name is None:
@@ -122,20 +122,20 @@ class Unit(MilitaryObject):
                         # game.map.get(u.r, u.c).game_objects.remove(u)
                         enemy_obj.player.destroy(game, u)
 
-                        self.player.reward += rewards_values.ENEMY_UNIT_DESTROYED
-                        enemy_obj.player.reward += rewards_values.OWN_UNIT_DESTROYED
+                        self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
+                        enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
 
                 enemy_obj.change_ownership(self.player)
 
-                self.player.reward += rewards_values.ENEMY_CITY_CAPTURED
-                enemy_obj.player.reward += rewards_values.OWN_CITY_CAPTURED_BY_ENEMY
+                self.player.add_reward(rewards_values.ENEMY_CITY_CAPTURED)
+                enemy_obj.player.add_reward(rewards_values.OWN_CITY_CAPTURED_BY_ENEMY)
 
 
             elif isinstance(enemy_obj, Unit):
                 enemy_obj.player.destroy(game, enemy_obj)  # del enemy_unit
 
-                self.player.reward += rewards_values.ENEMY_UNIT_DESTROYED
-                enemy_obj.player.reward += rewards_values.OWN_UNIT_DESTROYED
+                self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
+                enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
             else:
                 raise NotImplementedError()
 
@@ -152,7 +152,7 @@ class Unit(MilitaryObject):
             self.player.destroy(game, self)
             enemy_obj.hp = max(1, enemy_obj.hp - enemy_unit_damage)
 
-            self.player.reward += rewards_values.OWN_UNIT_DESTROYED
+            self.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
 
         else:
             self.hp -= unit_damage
@@ -195,8 +195,8 @@ class Unit(MilitaryObject):
                 enemy_obj.player.destroy(game, enemy_obj)
                 game.map.reset(enemy_obj.r, enemy_obj.c)
 
-                self.player.reward += rewards_values.ENEMY_UNIT_DESTROYED
-                enemy_obj.player.reward += rewards_values.OWN_UNIT_DESTROYED
+                self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
+                enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
 
                 # game.map.set(enemy_unit.r, enemy_unit.c, [])
             else:
@@ -217,7 +217,11 @@ class Unit(MilitaryObject):
 
     @profile
     def move_one_cell(self, game, new_r, new_c):
-        assert new_r, new_c in game.map.get_neighbours_grid_coords(self.r, self.c)
+        if not (new_r, new_c) in game.map.get_neighbours_grid_coords(self.r, self.c):
+            if self.role == MilitaryObject.COMBAT or \
+                    not (self.is_within_attack_range(game, new_r, new_c)
+                         and len(game.get_game_objects_on_hex(new_r, new_c, only_enemies=True)) > 0):
+                raise Exception()
 
         self.path = [(self.r, self.c), (new_r, new_c)]
         self.move(game)
