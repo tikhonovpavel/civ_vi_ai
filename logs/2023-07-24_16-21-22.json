@@ -1,0 +1,89 @@
+{
+  "map_size": [
+    19,
+    19
+  ],
+  "map": [
+    [
+      []
+    ]
+  ],
+  "initial_positions": [],
+  "turns": [
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-07-24T16:21:22.724407",
+          "eventType": "move",
+          "details": {
+            "unit_type": "tank",
+            "unit_location": [
+              25,
+              13
+            ],
+            "event_type": "move",
+            "path": [
+              [
+                25,
+                13
+              ],
+              [
+                25,
+                14
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-07-24T16:21:22.726399",
+          "eventType": "move",
+          "details": {
+            "unit_type": "tank",
+            "unit_location": [
+              10,
+              3
+            ],
+            "event_type": "move",
+            "path": [
+              [
+                10,
+                3
+              ],
+              [
+                10,
+                4
+              ],
+              [
+                10,
+                5
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-07-24T16:21:22.727390",
+          "eventType": "ranged_attack",
+          "details": {
+            "unit_type": "artillery",
+            "unit_location": [
+              14,
+              4
+            ],
+            "event_type": "ranged_attack",
+            "target_location": [
+              15,
+              4
+            ],
+            "enemy_damage": 25
+          }
+        }
+      ]
+    }
+  ]
+}

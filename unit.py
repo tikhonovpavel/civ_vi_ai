@@ -117,9 +117,10 @@ class Unit(MilitaryObject):
         if enemy_obj.hp - enemy_unit_damage <= 0:
 
             if isinstance(enemy_obj, City):
+
+                # for each unit, which happen to be at the city cell
                 for u in game.map.get(enemy_obj.r, enemy_obj.c).game_objects:
                     if isinstance(u, Unit):
-                        # game.map.get(u.r, u.c).game_objects.remove(u)
                         enemy_obj.player.destroy(game, u)
 
                         self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
@@ -129,7 +130,6 @@ class Unit(MilitaryObject):
 
                 self.player.add_reward(rewards_values.ENEMY_CITY_CAPTURED)
                 enemy_obj.player.add_reward(rewards_values.OWN_CITY_CAPTURED_BY_ENEMY)
-
 
             elif isinstance(enemy_obj, Unit):
                 enemy_obj.player.destroy(game, enemy_obj)  # del enemy_unit
@@ -160,14 +160,6 @@ class Unit(MilitaryObject):
 
             # -1 to MP because of the attack
             self.mp -= 1  # self.selected = False
-
-            # avail_path_coords = self._get_available_path_coords(game)
-            # if len(avail_path_coords) >= 2:
-            #     # if avail_path_coords[-1]'s is_attack is True then avail_path_coords[-2][0] will be adjacent,
-            #     # so it is guarantied to be a legal move
-            #     game.logger.log_event(MoveEvent(self.category, (self.r, self.c),
-            #                                     path=[coords for coords, _, _ in avail_path_coords]))
-            #     self.move_unconditionally(game, *avail_path_coords[-2][0])
 
         self.can_attack = False
         self.path = []
@@ -330,7 +322,6 @@ class Unit(MilitaryObject):
 
         self.r = new_r
         self.c = new_c
-
 
     def draw(self, screen, game):
         geom = game.map.get(self.r, self.c).geometry

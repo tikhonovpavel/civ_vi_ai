@@ -4,6 +4,7 @@ import json
 import pygame
 from line_profiler_pycharm import profile
 
+from rl_training import PolicyGradientAI
 from ui import ButtonStates
 from game import Game
 
@@ -20,9 +21,13 @@ def main():
     clock.tick(60)
 
     with open('init_states/1vs1_easy2.json', 'r', encoding='utf-8') as f:
+    # with open('init_states/1vs1vs1.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
 
     game = Game(config, screen, clock)
+    for p in game.players:
+        if isinstance(p.ai, PolicyGradientAI):
+            p.ai.init_policy_network()
     game.start()
 
     # Run the game loop

@@ -20,7 +20,7 @@ from ai import TrainableAI
 from game_object import MilitaryObject
 from unit import Unit
 
-torch.manual_seed(42)
+# torch.manual_seed(42)
 
 
 terrain_classes = ['plains', 'hills', 'forest', 'water']
@@ -43,10 +43,6 @@ def get_attribute_map(collection, attr_name, n_rows, n_cols, classes):
 
 @profile
 def to_onehot_tensor(attribute_map, num_classes):
-    # label_encoder = {cat: i for i, cat in enumerate(classes)}
-    # labels = np.vectorize(label_encoder.get)(attribute_map)
-    # labels = torch.LongTensor(labels)
-
     attribute_map = torch.LongTensor(attribute_map)
 
     onehot = torch.nn.functional.one_hot(attribute_map, num_classes=num_classes)
@@ -83,7 +79,7 @@ class PolarCoordinatesLayer(torch.nn.Module):
 
 
 class PolicyGradientAI(TrainableAI):
-    def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, device='cpu'):
+    def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, device='cpu', policy_network=None):
         super(PolicyGradientAI, self).__init__(game, player)
         self.max_distance_from_enemy = max_distance_from_enemy
 
@@ -92,16 +88,9 @@ class PolicyGradientAI(TrainableAI):
         self.std_rho = 1.0  # Tune this value based on your game
         self.std_phi = 0.1  # Tune this value based on your game
 
-        self.policy_network = torch.nn.Sequential(
-            torch.nn.Conv2d(17, 24, kernel_size=3, stride=1, padding=1),
-            torch.nn.ReLU(),
-            ResidualLayer(24),
-            ResidualLayer(24),
-            torch.nn.Flatten(),
-            torch.nn.Linear(24 * game.map.n_rows * game.map.n_columns, 19),
-            # torch.nn.Softmax(dim=-1),
-            # PolarCoordinatesLayer()
-        )
+        self.policy_network = None
+        self.lr = lr
+
         # self.mu_rho, self.log_sigma_rho, self.mu_phi, self.log_sigma_phi = \
         #     torch.chunk(self.policy_network[-1].output, 4, dim=1)
 
@@ -116,13 +105,31 @@ class PolicyGradientAI(TrainableAI):
         #     torch.nn.Linear(24 * game.map.n_rows * game.map.n_columns, game.map.n_rows * game.map.n_columns),
         #     torch.nn.Softmax(dim=-1)
         # )
-        self.policy_network.to(device)
-
-        self.optimizer = optim.Adam(self.policy_network.parameters(), lr=lr)
         # self.states = []
         # self.actions = []
         self.rewards = []
+        self._rewards_history = []
         self.saved_log_probs = []
+
+    def init_policy_network(self, policy_network=None):
+        if policy_network is None:
+            self.policy_network = torch.nn.Sequential(
+                torch.nn.Conv2d(17, 24, kernel_size=3, stride=1, padding=1),
+                torch.nn.ReLU(),
+                ResidualLayer(24),
+                ResidualLayer(24),
+                torch.nn.Flatten(),
+                torch.nn.Linear(24 * self.game.map.n_rows * self.game.map.n_columns, 19),
+                # torch.nn.Softmax(dim=-1),
+                # PolarCoordinatesLayer()
+            )
+        else:
+            self.policy_network = policy_network
+
+        self.policy_network.to(self.device)
+        self.optimizer = optim.Adam(self.policy_network.parameters(), lr=self.lr)
+
+        return policy_network
 
     @staticmethod
     def polar_coordinate_activations(_, __, output):
@@ -248,6 +255,7 @@ class PolicyGradientAI(TrainableAI):
 
     def receive_reward(self, reward):
         self.rewards.append(reward)
+        self._rewards_history.append(reward)
 
         # Update the policy if there's enough data
         if len(self.rewards) > 5 and all(reward == 0 for reward in self.rewards):
@@ -332,13 +340,19 @@ class PolicyGradientAI(TrainableAI):
         if len(self.rewards) != len(self.saved_log_probs):
             raise Exception('You should call receive_reward after create_paths at each turn')
 
-        input_tensor = self.create_input_tensor().to(self.device)
-
         log_prob_turn_total = torch.zeros(1)
         log_prob_turn_total.requires_grad = True
 
-        for i, unit in enumerate(player.units):
+        try:
+            input_tensor = self.create_input_tensor().to(self.device)
+        except RuntimeError as err:
+            if 'stack expects a non-empty TensorList' not in err.args:
+                raise err
 
+            self.saved_log_probs.append(log_prob_turn_total)
+            return
+
+        for i, unit in enumerate(player.units):
             unit_init_coords = unit.r, unit.c
 
             count = 0

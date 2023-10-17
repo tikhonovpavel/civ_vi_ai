@@ -38,7 +38,7 @@ class Tile:
         # self.terrain = TerrainTypes.PLAINS
 
         if terrain is None:
-            self.terrain = random.choices(terrain_types.values(), [0.5, 0.25, 0.25], k=1)[0]
+            self.terrain = random.choices(list(terrain_types.values()), [0.5, 0.25, 0.25], k=1)[0]
         else:
             self.terrain = terrain_types[terrain]
         

@@ -12,9 +12,11 @@ class City(MilitaryObject):
     MAX_HP = 200
     MAX_WALLS_HP = 100
 
-    def __init__(self, name, player, center_r, center_c, territory, hp=None, image_path='assets/city_icon1.png'):
+    def __init__(self, name, player, center_r, center_c, territory, hp=None, image_path='assets/city_icon1.png',
+                 combat_strength_base=95, ranged_strength_base=95, range_radius_base=2):
         super().__init__(name, 'city', player, center_r, center_c, role=MilitaryObject.RANGED,
-                         mp_base=0, hp=hp, combat_strength_base=95, ranged_strength_base=95, range_radius_base=2,
+                         mp_base=0, hp=hp, combat_strength_base=combat_strength_base,
+                         ranged_strength_base=ranged_strength_base, range_radius_base=range_radius_base,
                          sound_attack='assets/sounds/artillery_attack.ogg')
 
         assert center_r, center_c in territory
@@ -32,7 +34,7 @@ class City(MilitaryObject):
         self.hp = City.MAX_HP if hp is None else hp
         self.walls_hp = City.MAX_WALLS_HP
 
-        self._territory = territory
+        self._territory = set(tuple(x) for x in territory)
 
     @property
     def territory(self):
@@ -98,7 +100,10 @@ class City(MilitaryObject):
     def change_ownership(self, new_player):
         self.player.cities.remove(self)
         self._player = new_player
-        new_player.add_city(self)
+
+        new_player.cities.append(self)
+        # new_player.add_city(self)
+
         self.hp = 100
 
     def draw(self, screen, game, text_module):

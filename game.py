@@ -1,7 +1,9 @@
+import copy
 import json
 from datetime import datetime
 from itertools import dropwhile
 
+import numpy as np
 import pygame
 import torch
 from line_profiler_pycharm import profile
@@ -76,28 +78,32 @@ class Game:
 
         self.players = []
 
-        self.map = Map(16, 5, terrains=config['map'])
+        if 'map' in config:
+            self.map = Map(*np.array(config['map']).shape, terrains=config['map'])
+        else:
+            self.map = Map(30, 15)
 
         for p in config['players']:
             player = Player(p['nation'])
 
-            if p['ai']:
+            if 'ai' in p and p['ai']:
                 player.ai = globals()[p['ai']](self, player)
 
             self.players.append(player)
 
-            # player = self.get_player_by_nation(p['nation'])
-
             for c in p['cities']:
-                territory = set(tuple(x) for x in c['territory'])
-                assert tuple(c['center']) in territory
-                city = City(c['name'], player, *c['center'], territory)
+                city_dict = copy.deepcopy(c)
+                r, c = city_dict.pop('center')
+                city_dict['center_r'], city_dict['center_c'] = r, c
+                city_dict['player'] = player
+
+                city = City(**city_dict)
                 try:
                     self.add_game_obj(player, city)
                 except:
                     pass
 
-                for u in p['units']:
+                for u in p.get('units', list()):
                     u['player'] = player
                     unit = Unit(**u)
                     self.add_game_obj(player, unit)
@@ -181,16 +187,20 @@ class Game:
                    'ai': player.ai.__class__.__name__ if player.is_ai else None}
 
             for city in player.cities:
-                res['cities'].append({'name': city.name,
-                                      'center': [city.r, city.c],
-                                      'territory': list(city.territory)}, )
+                fields = ['name', 'category', 'role',
+                          'hp', 'image_path', 'ranged_strength_base', 'range_radius_base', 'combat_strength_base']
+                city_json = {k: getattr(city, k) for k in fields}
+                city_json['center'] = city.r, city.c
+                city_json['territory'] = list(city.territory)
+
+                res['cities'].append(city_json)
 
             res['units'] = []
             for unit in player.units:
-                fields = ['name', 'r', 'c', 'category', 'role', 'sub_role',
+                fields = ['name', 'r', 'c', 'category', 'role',
                           'mp', 'hp', 'image_path', 'mp_base', 'ranged_strength_base',
                           'range_radius_base', 'combat_strength_base', 'path']
-                unit_json = {k: v for k, v in unit.__dict__.items() if k in fields}
+                unit_json = {k: getattr(unit, k) for k in fields}
 
                 res['units'].append(unit_json)
 
