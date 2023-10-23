@@ -183,7 +183,7 @@ class QLearningAI(TrainableAI):
 
         self.game_n = game_n
 
-        return self.online_model
+        return self.online_model, self.reference_model
 
     def update_models(self):
         replay_buffer_sample = self.replay_buffer.sample(len(self.replay_buffer.buffer) // 10)
@@ -382,8 +382,8 @@ class QLearningAI(TrainableAI):
 
                     break
 
-            # print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
-            print()
+            print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
+            # print()
 
 
 # class PolicyGradientAI(TrainableAI):
