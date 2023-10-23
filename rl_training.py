@@ -8,8 +8,9 @@ import numpy as np
 from line_profiler_pycharm import profile
 
 import torch.optim as optim
-
 import torch.nn as nn
+
+from tabulate import tabulate
 
 from rewards_values import Rewards
 from ai import TrainableAI
@@ -59,51 +60,20 @@ class PolarCoordinatesLayer(torch.nn.Module):
 
 
 @dataclass
-# class Transition:
-#     game_number: int  
-#     turn_number: int 
-#     movement_number: int  # number of the move of the given unit inside one turn
-#     unit: Unit
-#     s: torch.Tensor
-#     a: int
-#     r: List[Dict[str, int]]  # List of dictionaries to store reasons for rewards
-#     s_next: torch.Tensor | None
-#     legal_actions_s_next: List[int] | None
-
-#     @property
-#     def total_reward(self):
-#         return sum([event[list(event.keys())[0]] for event in self.r])
-
 class Transition:
-    def __init__(self, 
-                 game_number: int, 
-                 turn_number: int, 
-                 movement_number: int, 
-                 unit, 
-                 s: torch.Tensor, 
-                 a: int, 
-                 r: List[Dict[str, int]], 
-                 s_next: torch.Tensor | None, 
-                 legal_actions_s_next: List[int] | None):
-        
-        # Check if r is a list of dictionaries
-        if not isinstance(r, list) or not all(isinstance(item, dict) for item in r):
-            raise ValueError("r should be a list of dictionaries representing rewards and their reasons.")
-        
-        self.game_number = game_number
-        self.turn_number = turn_number
-        self.movement_number = movement_number
-        self.unit = unit
-        self.s = s
-        self.a = a
-        self.r = r
-        self.s_next = s_next
-        self.legal_actions_s_next = legal_actions_s_next
+    game_number: int
+    turn_number: int
+    movement_number: int  # number of the move of the given unit inside one turn
+    unit: Unit
+    s: torch.Tensor
+    a: int
+    r: List[Dict[str, int]]  # List of dictionaries to store reasons for rewards
+    s_next: torch.Tensor | None
+    legal_actions_s_next: List[int] | None
 
     @property
     def total_reward(self):
         return sum([event[list(event.keys())[0]] for event in self.r])
-
 
 
 class ReplayBuffer:
@@ -115,6 +85,10 @@ class ReplayBuffer:
         return [rb for rb in self.buffer if rb.unit.name == unit_name]
 
     def add(self, transition: Transition):
+
+        if any(r.get('OWN_UNIT_DESTROYED', None) is not None for r in transition.r) and transition.unit.name == 'Shockwave Spitter':
+            print()
+
         if transition.unit.name == 'Shell Shock' and transition.turn_number == 3:
             print('hoba')
 
@@ -123,6 +97,9 @@ class ReplayBuffer:
         if len(self.buffer) >= self.capacity:
             self.buffer.pop(0)
         self.buffer.append(transition)
+
+        print(f'\nfrom ReplayBuffer.add(transition.unit=<{transition.unit}>, transition.r={transition.r})')
+        print(self)
 
     def sample(self, batch_size: int):
         return random.sample(self.buffer, batch_size)
@@ -145,26 +122,34 @@ class ReplayBuffer:
         if not isinstance(additional_reward, dict):
             raise Exception()
 
+        if additional_reward.get('OWN_UNIT_DESTROYED', None) is not None and unit.name == 'Shockwave Spitter':
+            print()
+
         candidates_count = 0
         updated = False
         for transition in reversed(self.buffer):
             if transition.turn_number == turn_number and transition.unit == unit and transition.s_next is None:
+                print(f'candidate for <{unit}> is: <{transition.unit}>')
                 candidates_count += 1
-            if candidates_count > 1:
-                raise ValueError(f"Multiple candidates found for unit {unit} "
-                                 f"on turn {turn_number} with s_next as None.")
 
-            assert transition.s_next is None and transition.legal_actions_s_next is None
+                if candidates_count > 1:
+                    raise ValueError(f"Multiple candidates found for unit {unit} "
+                                     f"on turn {turn_number} with s_next as None.")
 
-            transition.s_next = new_state
-            transition.legal_actions_s_next = new_state_legal_action
-            transition.r.append(additional_reward)  # Add the additional reward to the list
-            updated = True
-            break
+                assert transition.s_next is None and transition.legal_actions_s_next is None
+
+                transition.s_next = new_state
+                transition.legal_actions_s_next = new_state_legal_action
+                transition.r.append(additional_reward)  # Add the additional reward to the list
+                updated = True
+                break
 
         if not updated:
             raise ValueError(f"No transition found for unit {unit} "
-                         f"on turn {turn_number} with s_next as None.")
+                             f"on turn {turn_number} with s_next as None.")
+
+        print(f'\nfrom ReplayBuffer.update_new_state_and_reward(unit=<{unit}>, additional_reward={additional_reward})')
+        print(self)
 
     def get_unfinished_transitions(self):
         """
@@ -192,7 +177,24 @@ class ReplayBuffer:
                                      f"and turn {transition.turn_number}, which is not the last game or turn.")
 
         return unfinished_transitions
-    
+
+    def __str__(self):
+        headers = ["Game", "Turn", "Move", "Unit", "Action", "Reward"]
+        table_data = []
+
+        for transition in self.buffer:
+            row = [
+                transition.game_number,
+                transition.turn_number,
+                transition.movement_number,
+                str(transition.unit),
+                transition.a,
+                transition.r
+            ]
+            table_data.append(row)
+
+        return tabulate(table_data, headers=headers)
+
 
 class QLearningAI(TrainableAI):
     def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, gamma=0.98,
@@ -363,6 +365,7 @@ class QLearningAI(TrainableAI):
         log_prob_turn_total = torch.zeros(1)
         log_prob_turn_total.requires_grad = True
 
+        print(f'Units to create_paths for ({len(self.player.units)}): {self.player.units}')
         for i, unit in enumerate(player.units):
 
             new_state = None

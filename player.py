@@ -83,6 +83,10 @@ class Player:
         if game_object in self.units:
             game.map.remove(game_object.r, game_object.c, game_object)
             self.units.remove(game_object)
+            print(f'unit {game_object} has been destroyed (allegedly)')
+
+            if game_object.name == 'Shockwave Spitter':
+                print()
 
             if not isinstance(self.ai, QLearningAI):
                 return

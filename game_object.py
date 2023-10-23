@@ -43,7 +43,6 @@ class MilitaryObject:
             self.mp = mp_base
 
         self.mp_base = mp_base
-
         self.modifiers = modifiers
 
         sound_attack = sound_attack if sound_attack else f'assets/sounds/{category}_attack.ogg'
