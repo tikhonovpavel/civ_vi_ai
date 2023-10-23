@@ -69,7 +69,7 @@ class City(MilitaryObject):
 
         if enemy_obj.hp - enemy_obj_damage <= 0:
             if not isinstance(enemy_obj, City):
-                enemy_obj.player.destroy(game, enemy_obj)
+                enemy_obj.player.destroy(game, enemy_obj, on_defense=True)
 
                 # game.map.reset(enemy_unit.r, enemy_unit.c)
                 # game.map.set(enemy_unit.r, enemy_unit.c, [])

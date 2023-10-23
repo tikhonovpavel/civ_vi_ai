@@ -89,7 +89,10 @@ class Unit(MilitaryObject):
         # self.sound_attack = pygame.mixer.Sound(sound_attack) if sound_attack else None
         # self.sound_movement = pygame.mixer.Sound(sound_movement) if sound_movement else None
 
-    def combat_attack(self, game, enemy_r, enemy_c):
+    def combat_attack(self, game, enemy_r, enemy_c) -> tuple[int, int, int, int]:
+        own_reward = 0
+        enemy_reward = 0
+
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
 
         enemy_unit_damage = self.compute_combat_damage(self, enemy_obj)
@@ -117,25 +120,33 @@ class Unit(MilitaryObject):
         if enemy_obj.hp - enemy_unit_damage <= 0:
 
             if isinstance(enemy_obj, City):
-
                 # for each unit, which happen to be at the city cell
                 for u in game.map.get(enemy_obj.r, enemy_obj.c).game_objects:
                     if isinstance(u, Unit):
-                        enemy_obj.player.destroy(game, u)
+                        enemy_obj.player.destroy(game, u, on_defense=True)
 
                         self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
+                        own_reward += rewards_values.ENEMY_UNIT_DESTROYED
+
                         enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
+                        enemy_reward += rewards_values.OWN_UNIT_DESTROYED
 
                 enemy_obj.change_ownership(self.player)
 
                 self.player.add_reward(rewards_values.ENEMY_CITY_CAPTURED)
+                own_reward += rewards_values.ENEMY_CITY_CAPTURED
+
                 enemy_obj.player.add_reward(rewards_values.OWN_CITY_CAPTURED_BY_ENEMY)
+                enemy_reward += rewards_values.OWN_CITY_CAPTURED_BY_ENEMY
 
             elif isinstance(enemy_obj, Unit):
-                enemy_obj.player.destroy(game, enemy_obj)  # del enemy_unit
+                enemy_obj.player.destroy(game, enemy_obj, on_defense=True)  # del enemy_unit
 
                 self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
+                own_reward += rewards_values.ENEMY_UNIT_DESTROYED
+
                 enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
+                enemy_reward += rewards_values.OWN_UNIT_DESTROYED
             else:
                 raise NotImplementedError()
 
@@ -149,10 +160,11 @@ class Unit(MilitaryObject):
 
         elif self.hp - unit_damage <= 0:
 
-            self.player.destroy(game, self)
+            self.player.destroy(game, self, on_defense=False)
             enemy_obj.hp = max(1, enemy_obj.hp - enemy_unit_damage)
 
             self.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
+            own_reward += rewards_values.OWN_UNIT_DESTROYED
 
         else:
             self.hp -= unit_damage
@@ -166,9 +178,12 @@ class Unit(MilitaryObject):
 
         enemy_obj.path = []
 
-        return unit_damage, enemy_unit_damage
+        return unit_damage, enemy_unit_damage, own_reward, enemy_reward
 
     def ranged_attack(self, game, enemy_r, enemy_c):
+        own_reward = 0
+        enemy_reward = 0
+
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
         enemy_unit_damage = MilitaryObject.compute_ranged_damage(self, enemy_obj)
 
@@ -184,11 +199,14 @@ class Unit(MilitaryObject):
 
         if enemy_obj.hp - enemy_unit_damage <= 0:
             if not isinstance(enemy_obj, City):
-                enemy_obj.player.destroy(game, enemy_obj)
+                enemy_obj.player.destroy(game, enemy_obj, on_defense=True)
                 game.map.reset(enemy_obj.r, enemy_obj.c)
 
                 self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
+                own_reward += rewards_values.ENEMY_UNIT_DESTROYED
+
                 enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
+                enemy_reward += rewards_values.OWN_UNIT_DESTROYED
 
                 # game.map.set(enemy_unit.r, enemy_unit.c, [])
             else:
@@ -200,7 +218,7 @@ class Unit(MilitaryObject):
         self.path = []
         self.can_attack = False
 
-        return enemy_unit_damage
+        return enemy_unit_damage, own_reward, enemy_reward
 
     def gain_hps(self):
         if self.mp == self.mp_base:
@@ -208,7 +226,7 @@ class Unit(MilitaryObject):
                 self.hp = min(100, self.hp + 10)
 
     @profile
-    def move_one_cell(self, game, new_r, new_c):
+    def move_one_cell(self, game, new_r, new_c) -> int:
         if not (new_r, new_c) in game.map.get_neighbours_grid_coords(self.r, self.c):
             if self.role == MilitaryObject.COMBAT or \
                     not (self.is_within_attack_range(game, new_r, new_c)
@@ -216,25 +234,28 @@ class Unit(MilitaryObject):
                 raise Exception()
 
         self.path = [(self.r, self.c), (new_r, new_c)]
-        self.move(game)
+        return self.move(game)
 
     @profile
-    def move(self, game):
+    def move(self, game) -> int:
+        own_reward, enemy_reward = 0, 0
+
         # if there is just a transition without an attack - the logic is the same for any type of unit
         if len(self.path) == 0 and self.get_ranged_target(game) is None:
-            return
+            return 0
 
         # check if ranged unit inside the attack radius
         ranged_target = self.get_ranged_target(game)
         if ranged_target is not None:
-            enemy_unit_damage = self.ranged_attack(game, ranged_target.r, ranged_target.c)
+            enemy_unit_damage, own_rew, enemy_rew = self.ranged_attack(game, ranged_target.r, ranged_target.c)
+            own_reward += own_rew
             game.logger.log_event(RangedAttackEvent(self,
                                                     target=ranged_target,
                                                     enemy_damage=enemy_unit_damage))
         else:
             avail_path_coords = self._get_available_path_coords(game)
             if len(avail_path_coords) == 0:
-                return
+                return 0
 
             coord, mp_spent, is_attack = avail_path_coords[-1]
             new_r, new_c = coord
@@ -246,7 +267,10 @@ class Unit(MilitaryObject):
                     game.logger.log_event(MoveEvent(self, path=path_log))
                     self.move_unconditionally(game, *avail_path_coords[-2][0])
 
-                unit_damage, enemy_unit_damage = self.combat_attack(game, new_r, new_c)
+                unit_damage, enemy_unit_damage, own_rew, enemy_rew = self.combat_attack(game, new_r, new_c)
+                own_reward += own_rew
+                enemy_reward += enemy_rew
+
             else:
                 path_log = [(self.r, self.c)] + [coords for coords, _, _ in avail_path_coords]
                 game.logger.log_event(MoveEvent(self, path=path_log))
@@ -254,7 +278,11 @@ class Unit(MilitaryObject):
                 self.mp = max(0, self.mp - mp_spent)
 
                 self.path = self.path[self.path.index(coord):]
+
                 # self.ranged_target = None
+
+        return own_reward  # , enemy_reward
+
 
     def _get_available_path_coords(self, game) -> List[Tuple[Tuple[int, int], int, bool]]:
         '''

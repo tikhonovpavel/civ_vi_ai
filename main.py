@@ -4,7 +4,7 @@ import json
 import pygame
 from line_profiler_pycharm import profile
 
-from rl_training import PolicyGradientAI
+from rl_training import QLearningAI
 from ui import ButtonStates
 from game import Game
 
@@ -26,8 +26,8 @@ def main():
 
     game = Game(config, screen, clock)
     for p in game.players:
-        if isinstance(p.ai, PolicyGradientAI):
-            p.ai.init_policy_network()
+        if isinstance(p.ai, QLearningAI):
+            p.ai.init_models(None)
     game.start()
 
     # Run the game loop

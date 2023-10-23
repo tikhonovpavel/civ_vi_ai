@@ -1,6 +1,8 @@
 import pygame
 
+import rewards_values
 from city import City
+from rl_training import QLearningAI
 from unit import Unit
 
 
@@ -75,14 +77,30 @@ class Player:
 
         return game_obj
 
-    def destroy(self, game, game_object):
+    def destroy(self, game, game_object, on_defense):
         game_object.hp = 0
 
         if game_object in self.units:
             game.map.remove(game_object.r, game_object.c, game_object)
             self.units.remove(game_object)
+
+            if not isinstance(self.ai, QLearningAI):
+                return
+
+            if on_defense:
+                self.ai.replay_buffer.update_new_state_and_reward(game.turn_number, game_object, None,
+                                                                  rewards_values.OWN_UNIT_DESTROYED)
+
         elif game_object in self.cities:
             self.cities.remove(game_object)
+
+            if not isinstance(self.ai, QLearningAI):
+                return
+
+            # city cannot be captured when it attacks, so the check is redundant
+            for unit in self.units:
+                self.ai.replay_buffer.update_new_state_and_reward(game.turn_number, unit, None,
+                                                                  rewards_values.OWN_CITY_CAPTURED_BY_ENEMY)
         else:
             raise Exception()
 

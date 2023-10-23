@@ -115,6 +115,241 @@
   ],
   "players": [
     {
+      "nation": "Egypt",
+      "cities": [
+        {
+          "name": "Cairo",
+          "center": [
+            12,
+            4
+          ],
+          "territory": [
+            [
+              12,
+              4
+            ],
+            [
+              12,
+              1
+            ],
+            [
+              14,
+              4
+            ],
+            [
+              14,
+              1
+            ],
+            [
+              5,
+              4
+            ],
+            [
+              9,
+              2
+            ],
+            [
+              11,
+              2
+            ],
+            [
+              8,
+              3
+            ],
+            [
+              10,
+              3
+            ],
+            [
+              13,
+              2
+            ],
+            [
+              15,
+              2
+            ],
+            [
+              7,
+              4
+            ],
+            [
+              12,
+              3
+            ],
+            [
+              14,
+              3
+            ],
+            [
+              11,
+              4
+            ],
+            [
+              10,
+              2
+            ],
+            [
+              9,
+              4
+            ],
+            [
+              11,
+              1
+            ],
+            [
+              13,
+              4
+            ],
+            [
+              13,
+              1
+            ],
+            [
+              15,
+              4
+            ],
+            [
+              15,
+              1
+            ],
+            [
+              6,
+              4
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              12,
+              2
+            ],
+            [
+              14,
+              2
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              9,
+              3
+            ],
+            [
+              10,
+              4
+            ],
+            [
+              11,
+              3
+            ],
+            [
+              13,
+              3
+            ],
+            [
+              15,
+              3
+            ]
+          ]
+        }
+      ],
+      "ai": "QLearningAI",
+      "units": [
+        {
+          "path": [],
+          "name": "Metal Maelstrom",
+          "category": "tank",
+          "r": 7,
+          "c": 4,
+          "role": "combat",
+          "ranged_strength_base": 0,
+          "range_radius_base": 0,
+          "combat_strength_base": 85,
+          "hp": 100,
+          "mp": 4,
+          "mp_base": 4,
+          "image_path": "assets/units/tank.png"
+        },
+        {
+          "path": [],
+          "name": "Shell Shock",
+          "category": "tank",
+          "r": 12,
+          "c": 2,
+          "role": "combat",
+          "ranged_strength_base": 0,
+          "range_radius_base": 0,
+          "combat_strength_base": 85,
+          "hp": 100,
+          "mp": 4,
+          "mp_base": 4,
+          "image_path": "assets/units/tank.png"
+        },
+        {
+          "path": [],
+          "name": "Shell Shredder",
+          "category": "artillery",
+          "r": 8,
+          "c": 4,
+          "role": "ranged",
+          "ranged_strength_base": 90,
+          "range_radius_base": 2,
+          "combat_strength_base": 70,
+          "hp": 100,
+          "mp": 3,
+          "mp_base": 3,
+          "image_path": "assets/units/artillery.png"
+        },
+        {
+          "path": [],
+          "name": "Thunder Tosser",
+          "category": "artillery",
+          "r": 11,
+          "c": 3,
+          "role": "ranged",
+          "ranged_strength_base": 90,
+          "range_radius_base": 2,
+          "combat_strength_base": 70,
+          "hp": 100,
+          "mp": 3,
+          "mp_base": 3,
+          "image_path": "assets/units/artillery.png"
+        },
+        {
+          "path": [],
+          "name": "Ballistic Bane",
+          "category": "artillery",
+          "r": 13,
+          "c": 2,
+          "role": "ranged",
+          "ranged_strength_base": 90,
+          "range_radius_base": 2,
+          "combat_strength_base": 70,
+          "hp": 100,
+          "mp": 3,
+          "mp_base": 3,
+          "image_path": "assets/units/artillery.png"
+        },
+        {
+          "path": [],
+          "name": "Shockwave Spitter",
+          "category": "artillery",
+          "r": 11,
+          "c": 1,
+          "role": "ranged",
+          "ranged_strength_base": 90,
+          "range_radius_base": 2,
+          "combat_strength_base": 70,
+          "hp": 100,
+          "mp": 3,
+          "mp_base": 3,
+          "image_path": "assets/units/artillery.png"
+        }
+      ]
+    },
+    {
       "nation": "Rome",
       "cities": [
         {
@@ -292,241 +527,6 @@
           "mp": 4,
           "mp_base": 4,
           "image_path": "assets/units/tank.png"
-        }
-      ]
-    },
-    {
-      "nation": "Egypt",
-      "cities": [
-        {
-          "name": "Cairo",
-          "center": [
-            12,
-            4
-          ],
-          "territory": [
-            [
-              12,
-              4
-            ],
-            [
-              12,
-              1
-            ],
-            [
-              14,
-              4
-            ],
-            [
-              14,
-              1
-            ],
-            [
-              5,
-              4
-            ],
-            [
-              9,
-              2
-            ],
-            [
-              11,
-              2
-            ],
-            [
-              8,
-              3
-            ],
-            [
-              10,
-              3
-            ],
-            [
-              13,
-              2
-            ],
-            [
-              15,
-              2
-            ],
-            [
-              7,
-              4
-            ],
-            [
-              12,
-              3
-            ],
-            [
-              14,
-              3
-            ],
-            [
-              11,
-              4
-            ],
-            [
-              10,
-              2
-            ],
-            [
-              9,
-              4
-            ],
-            [
-              11,
-              1
-            ],
-            [
-              13,
-              4
-            ],
-            [
-              13,
-              1
-            ],
-            [
-              15,
-              4
-            ],
-            [
-              15,
-              1
-            ],
-            [
-              6,
-              4
-            ],
-            [
-              7,
-              3
-            ],
-            [
-              12,
-              2
-            ],
-            [
-              14,
-              2
-            ],
-            [
-              8,
-              4
-            ],
-            [
-              9,
-              3
-            ],
-            [
-              10,
-              4
-            ],
-            [
-              11,
-              3
-            ],
-            [
-              13,
-              3
-            ],
-            [
-              15,
-              3
-            ]
-          ]
-        }
-      ],
-      "ai": "PolicyGradientAI",
-      "units": [
-        {
-          "path": [],
-          "name": "Metal Maelstrom",
-          "category": "tank",
-          "r": 7,
-          "c": 4,
-          "role": "combat",
-          "ranged_strength_base": 0,
-          "range_radius_base": 0,
-          "combat_strength_base": 85,
-          "hp": 100,
-          "mp": 4,
-          "mp_base": 4,
-          "image_path": "assets/units/tank.png"
-        },
-        {
-          "path": [],
-          "name": "Shell Shock",
-          "category": "tank",
-          "r": 12,
-          "c": 2,
-          "role": "combat",
-          "ranged_strength_base": 0,
-          "range_radius_base": 0,
-          "combat_strength_base": 85,
-          "hp": 100,
-          "mp": 4,
-          "mp_base": 4,
-          "image_path": "assets/units/tank.png"
-        },
-        {
-          "path": [],
-          "name": "Shell Shredder",
-          "category": "artillery",
-          "r": 8,
-          "c": 4,
-          "role": "ranged",
-          "ranged_strength_base": 90,
-          "range_radius_base": 2,
-          "combat_strength_base": 70,
-          "hp": 100,
-          "mp": 3,
-          "mp_base": 3,
-          "image_path": "assets/units/artillery.png"
-        },
-        {
-          "path": [],
-          "name": "Thunder Tosser",
-          "category": "artillery",
-          "r": 11,
-          "c": 3,
-          "role": "ranged",
-          "ranged_strength_base": 90,
-          "range_radius_base": 2,
-          "combat_strength_base": 70,
-          "hp": 100,
-          "mp": 3,
-          "mp_base": 3,
-          "image_path": "assets/units/artillery.png"
-        },
-        {
-          "path": [],
-          "name": "Ballistic Bane",
-          "category": "artillery",
-          "r": 13,
-          "c": 2,
-          "role": "ranged",
-          "ranged_strength_base": 90,
-          "range_radius_base": 2,
-          "combat_strength_base": 70,
-          "hp": 100,
-          "mp": 3,
-          "mp_base": 3,
-          "image_path": "assets/units/artillery.png"
-        },
-        {
-          "path": [],
-          "name": "Shockwave Spitter",
-          "category": "artillery",
-          "r": 11,
-          "c": 1,
-          "role": "ranged",
-          "ranged_strength_base": 90,
-          "range_radius_base": 2,
-          "combat_strength_base": 70,
-          "hp": 100,
-          "mp": 3,
-          "mp_base": 3,
-          "image_path": "assets/units/artillery.png"
         }
       ]
     }

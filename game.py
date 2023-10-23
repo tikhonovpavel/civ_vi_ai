@@ -15,7 +15,7 @@ from city import City
 from display import Display
 from logger import Logger
 # from rl_training import convert_map_to_tensor
-from rl_training import PolicyGradientAI
+from rl_training import QLearningAI
 
 from ui import Button, Marker, UI, Text  # , UI
 
@@ -158,12 +158,13 @@ class Game:
 
     def start(self):
         self._is_started = True
-        self.logger.start_turn(self.get_current_player().nation)
+        # self.logger.start_turn(self.get_current_player().nation)
 
-        current_player = self.get_current_player()
-        if self.autoplay_marker.state and current_player.is_ai:
-            current_player.create_paths()
-            self.next_turn()
+            # current_player = self.get_current_player()
+
+        # if self.autoplay_marker.state and current_player.is_ai:
+        #     current_player.create_paths()
+        #     self.next_turn()
 
     def _get_initial_positions_string(self):
         result = []
@@ -212,8 +213,13 @@ class Game:
                                'w', encoding='utf-8'),
                   ensure_ascii=False, indent=2)
 
-    def check_winning_conditions(self, player):
-        # return False
+    def check_winning_conditions(self, player, no_units_eq_lose=False):
+        if no_units_eq_lose:
+            # if the other player has no units => win (DANGED: appropriate only for 2 players)
+            other_player = next(p for p in self.players if p != player)
+            if len(other_player.units) == 0:
+                return True
+
         total_cities_n = sum(len(p.cities) for p in self.players)
         return len(player.cities) == total_cities_n
 
