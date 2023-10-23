@@ -35,7 +35,7 @@ def start_training():
         while True:
             current_player = game.get_current_player()
             print(f'\n\n== {current_player.nation} started the turn {game.turn_number} '
-                  f'with {len(current_player.units)} units and {len(current_player.cities)} cities ==:')
+                  f'with {len(current_player.units)} units and {len(current_player.cities)} cities: ==')
 
             game.logger.start_turn(current_player.nation)
 

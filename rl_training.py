@@ -85,7 +85,7 @@ class ReplayBuffer:
     def sample(self, batch_size: int):
         return random.sample(self.buffer, batch_size)
 
-    def update_new_state_and_reward(self, turn_number, unit, new_state, additional_reward):
+    def update_new_state_and_reward(self, turn_number, unit, new_state, new_state_legal_action, additional_reward):
         """
         Updates the state and reward for the specified unit and turn.
 
@@ -106,9 +106,13 @@ class ReplayBuffer:
             if transition.turn_number == turn_number and transition.unit == unit and transition.s_next is None:
                 candidates_count += 1
                 if candidates_count > 1:
-                    raise ValueError(
-                        f"Multiple candidates found for unit {unit} on turn {turn_number} with s_next as None.")
+                    raise ValueError(f"Multiple candidates found for unit {unit} "
+                                     f"on turn {turn_number} with s_next as None.")
+
+                assert transition.s_next is None and transition.legal_actions_s_next is None
+
                 transition.s_next = new_state
+                transition.legal_actions_s_next = new_state_legal_action
                 transition.r += additional_reward
                 updated = True
                 break
@@ -285,14 +289,15 @@ class QLearningAI(TrainableAI):
 
         for i, unit in enumerate(player.units):
 
-
-
             new_state = None
+            new_state_legal_actions = None
 
             actions_taken_count = 0
             while True:
                 if new_state is None:
+                    assert new_state_legal_actions is None
                     state = self.create_input_tensor(unit).to(self.device)
+                    legal_actions = self.get_legal_actions(unit)
 
                     # если это первый ход, то значит этого товарища ещё нет в реплей баффере, поэтому ничего не делаем
                     #
@@ -305,22 +310,24 @@ class QLearningAI(TrainableAI):
 
                     if self.game.turn_number > 1:
                         self.replay_buffer.update_new_state_and_reward(
-                            turn_number=self.game.turn_number-1,
+                            turn_number=self.game.turn_number - 1,
                             unit=unit,
                             new_state=state,
-                            additional_reward=0)
+                            additional_reward=0,
+                            new_state_legal_action=legal_actions,)
 
                 else:
                     state = new_state
 
-                legal_cells = self.get_legal_actions(unit)
+                    assert new_state_legal_actions is not None
+                    legal_actions = new_state_legal_actions
 
-                if len(legal_cells) == 0:
+                if len(legal_actions) == 0:
                     # just stay where we are
                     unit.path = []
                     break
 
-                chosen_action = self.select_action(state, legal_cells)
+                chosen_action = self.select_action(state, legal_actions)
                 # chosen_action_old = chosen_action
                 # chosen_action = legal_cells[chosen_action]
 
@@ -333,20 +340,18 @@ class QLearningAI(TrainableAI):
                     # just stay where we are x2
                     print(f'{actions_taken_count + 1}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'
                           # f' prob was {legal_action_probabilities[chosen_action_old].item()}'
-                          f' (1/{len(legal_cells)} actions)')
+                          f' (1/{len(legal_actions)} actions)')
                     unit.path = []
                     break
 
                 print(f'{actions_taken_count + 1}) {unit.name} {unit.coords} -> {target_coords}.'
                       # f' prob was {legal_action_probabilities[chosen_action_old].item()}'
-                      f' (1/{len(legal_cells)} actions)')
+                      f' (1/{len(legal_actions)} actions)')
                 reward = unit.move_one_cell(self.game, *target_coords)
                 self.game.update()
                 actions_taken_count += 1
 
                 if unit.mp != 0 and unit.hp:  # then just continue to move this unit
-                    unit.mp = unit.mp_base
-
                     new_state = self.create_input_tensor(unit).to(self.device)
                     new_state_legal_actions = self.get_legal_actions(unit)
 
@@ -363,7 +368,9 @@ class QLearningAI(TrainableAI):
                                                            legal_actions_s_next=new_state_legal_actions))
                 else:
                     # no more moves left for the unit. We don't yet know the next state
-                    # (and therefore the legal_actions at this state), so leave it as None
+                    # (and therefore the legal_actions at this state), so leave them as None
+                    # unit.mp = unit.mp_base
+
                     player.ai.replay_buffer.add(Transition(game_number=self.game_n,
                                                            turn_number=self.game.turn_number,
                                                            unit=unit,
@@ -375,7 +382,8 @@ class QLearningAI(TrainableAI):
 
                     break
 
-            print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
+            # print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
+            print()
 
 
 # class PolicyGradientAI(TrainableAI):
