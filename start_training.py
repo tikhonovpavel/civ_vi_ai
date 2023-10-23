@@ -92,10 +92,10 @@ def start_training():
         rl_player.ai.update_models()
 
         rewards.append(rl_player.reward_cum)
-        rewards_lengths.append(len(rl_player.ai._rewards_history))
+        # rewards_lengths.append(len(rl_player.ai._rewards_history))
 
     plt.plot(rewards, label='rewards')
-    plt.plot(rewards_lengths, label='rewards length')
+    # plt.plot(rewards_lengths, label='rewards length')
     plt.legend()
     plt.show()
 
