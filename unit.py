@@ -378,6 +378,8 @@ class Unit(MilitaryObject):
             (geom.x - hp_length / 2, geom.y - hp_offset, hp_length, hp_thickness),
             width=1)
 
+    def __repr__(self):
+        return f'{self.name} at {hex(id(self))}'
 
 class Units:
     Tank = lambda player, r, c: Unit('tank', player, r, c,

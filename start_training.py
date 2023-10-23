@@ -26,7 +26,7 @@ def start_training():
                     autoplay=True, autoplay_max_turns=episode_max_length)
         models = game.players[0].ai.init_models(models, i)
 
-        qlearning_ai_player = game.players[0]
+        rl_player = game.players[0]
 
         game.start()
 
@@ -34,14 +34,15 @@ def start_training():
         game.subturn_number = 0
         while True:
             current_player = game.get_current_player()
-            print(f'\n\n{current_player.nation} started the turn {game.turn_number} '
-                  f'with {len(current_player.units)} units and {len(current_player.cities)} cities:')
+            print(f'\n\n== {current_player.nation} started the turn {game.turn_number} '
+                  f'with {len(current_player.units)} units and {len(current_player.cities)} cities ==:')
 
             game.logger.start_turn(current_player.nation)
 
             current_player.create_paths()
 
             if game.check_winning_conditions(current_player, no_units_eq_lose=True):
+                # ну собственно надо здесь сделать апдейт состояний и ревордов
                 if isinstance(current_player.ai, QLearningAI):
                     print('QLearningAI won!')
                 else:
@@ -57,7 +58,11 @@ def start_training():
                 obj.is_selected = False
 
             if game.check_winning_conditions(current_player, no_units_eq_lose=True):
-                print(current_player.nation + ' won!')
+                # ну собственно надо здесь сделать апдейт состояний и ревордов x2
+                if isinstance(current_player.ai, QLearningAI):
+                    print('QLearningAI won!')
+                else:
+                    print('QLearningAI lost')
                 # reward += 1000
                 break
 
@@ -81,10 +86,10 @@ def start_training():
                 game.turn_number += 1
                 # print(f'Turn number switched from {game.turn_number - 1} to {game.turn_number}')
 
-        rl_player = next(p for p in game.players if isinstance(p.ai, QLearningAI))
+        # rl_player = next(p for p in game.players if isinstance(p.ai, QLearningAI))
         print(f'Reward of the game {i + 1}/{n_games} is: {rl_player.reward_cum}')
 
-        rl_player.ai.update_policy()
+        rl_player.ai.update_models()
 
         rewards.append(rl_player.reward_cum)
         rewards_lengths.append(len(rl_player.ai._rewards_history))

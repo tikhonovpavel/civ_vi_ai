@@ -62,11 +62,12 @@ class PolarCoordinatesLayer(torch.nn.Module):
 class Transition:
     game_number: int
     turn_number: int
-    unit: object
+    unit: Unit
     s: torch.Tensor
     a: int
-    r: float
+    r: int
     s_next: torch.Tensor | None
+    legal_actions_s_next: List[int] | None
 
 
 class ReplayBuffer:
@@ -75,7 +76,7 @@ class ReplayBuffer:
         self.buffer = []
 
     def add(self, transition: Transition):
-        if len(self.buffer) > 100:
+        if len(self.buffer) > 30:
             print()
         if len(self.buffer) >= self.capacity:
             self.buffer.pop(0)
@@ -198,10 +199,10 @@ class QLearningAI(TrainableAI):
         next_state_tensor_batch = torch.stack([s for s in next_states if s is not None]).to(self.device)
 
         # Для Q-сети нам нужно предсказать Q-значение для совершенного действия
-        model_pred = self.online_model(state_tensor_batch).gather(1, action_tensor_batch.unsqueeze(-1)).squeeze(-1)
+        model_pred = self.online_model(state_tensor_batch.squeeze()).gather(1, action_tensor_batch.unsqueeze(-1)).squeeze(-1)
 
         # Для следующего состояния мы выбираем максимальное Q-значение только среди допустимых действий
-        all_next_state_values = self.reference_model(next_state_tensor_batch)
+        all_next_state_values = self.reference_model(next_state_tensor_batch.squeeze())
         next_state_values = []
         for idx, values in enumerate(all_next_state_values):
             legal_values = values[legal_actions_s_next[idx]]
@@ -283,22 +284,36 @@ class QLearningAI(TrainableAI):
         log_prob_turn_total.requires_grad = True
 
         for i, unit in enumerate(player.units):
-            # if there
+
+
 
             new_state = None
-            # unit_init_coords = unit.r, unit.c
 
             actions_taken_count = 0
-            while unit.mp != 0 and unit.hp > 0:
+            while True:
                 if new_state is None:
                     state = self.create_input_tensor(unit).to(self.device)
+
+                    # если это первый ход, то значит этого товарища ещё нет в реплей баффере, поэтому ничего не делаем
+                    #
+                    # но если это не первый ход внутри одной игры, то тогда последнее состояние юнита в баффере должно быть None
+                    # и мы должны заменить его на текущее
+                    #
+                    # Note: если этого товарища убил противник своей атакой, то это был бы особый случай. Но поскольку тогда
+                    # юнит удаляется из списка player.units, то этот случай получается здесь не надо это учитывать,
+                    # и обработка уже произошла в методе destroy в момент убийства
+
+                    if self.game.turn_number > 1:
+                        self.replay_buffer.update_new_state_and_reward(
+                            turn_number=self.game.turn_number-1,
+                            unit=unit,
+                            new_state=state,
+                            additional_reward=0)
+
                 else:
                     state = new_state
 
-                nearest_neighbours = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)
-
-                legal_cells = [i for i, cell in enumerate(nearest_neighbours)
-                               if self.check_if_legal(unit, cell, nearest_neighbours)]
+                legal_cells = self.get_legal_actions(unit)
 
                 if len(legal_cells) == 0:
                     # just stay where we are
@@ -329,24 +344,36 @@ class QLearningAI(TrainableAI):
                 self.game.update()
                 actions_taken_count += 1
 
-                new_state = self.create_input_tensor(unit).to(self.device)
+                if unit.mp != 0 and unit.hp:  # then just continue to move this unit
+                    unit.mp = unit.mp_base
 
-                if unit.mp != 0 and unit.hp:
+                    new_state = self.create_input_tensor(unit).to(self.device)
+                    new_state_legal_actions = self.get_legal_actions(unit)
+
+                    if len(new_state_legal_actions) == 0:
+                        print()
+
                     player.ai.replay_buffer.add(Transition(game_number=self.game_n,
                                                            turn_number=self.game.turn_number,
                                                            unit=unit,
                                                            s=state,
                                                            a=chosen_action,
                                                            r=reward,
-                                                           s_next=new_state))
+                                                           s_next=new_state,
+                                                           legal_actions_s_next=new_state_legal_actions))
                 else:
+                    # no more moves left for the unit. We don't yet know the next state
+                    # (and therefore the legal_actions at this state), so leave it as None
                     player.ai.replay_buffer.add(Transition(game_number=self.game_n,
                                                            turn_number=self.game.turn_number,
                                                            unit=unit,
                                                            s=state,
                                                            a=chosen_action,
                                                            r=reward,
-                                                           s_next=None))
+                                                           s_next=None,
+                                                           legal_actions_s_next=None))
+
+                    break
 
             print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
 
