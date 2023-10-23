@@ -88,8 +88,12 @@ class Player:
                 return
 
             if on_defense:
-                self.ai.replay_buffer.update_new_state_and_reward(game.turn_number, game_object, None,
-                                                                  rewards_values.OWN_UNIT_DESTROYED)
+                self.ai.replay_buffer.update_new_state_and_reward(
+                    turn_number=game.turn_number,
+                    unit=game_object,
+                    new_state=None,
+                    new_state_legal_action=None,  # any action is illegal when you're dead
+                    additional_reward=rewards_values.OWN_UNIT_DESTROYED)
 
         elif game_object in self.cities:
             self.cities.remove(game_object)
@@ -97,10 +101,15 @@ class Player:
             if not isinstance(self.ai, QLearningAI):
                 return
 
-            # city cannot be captured when it attacks, so the check is redundant
+            # city cannot be captured when it attacks, so the check (if on_defense) is redundant
+
             for unit in self.units:
-                self.ai.replay_buffer.update_new_state_and_reward(game.turn_number, unit, None,
-                                                                  rewards_values.OWN_CITY_CAPTURED_BY_ENEMY)
+                self.ai.replay_buffer.update_new_state_and_reward(
+                    turn_number=game.turn_number,
+                    unit=unit,
+                    new_state=None,
+                    new_state_legal_action=None,
+                    additional_reward=rewards_values.OWN_CITY_CAPTURED_BY_ENEMY)
         else:
             raise Exception()
 
