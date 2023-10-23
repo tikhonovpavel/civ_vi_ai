@@ -3,8 +3,10 @@ import random
 
 import networkx as nx
 import pygame
+
 from line_profiler_pycharm import profile
 
+random.seed(42)
 
 class MilitaryObject:
     RANGED = 'ranged'

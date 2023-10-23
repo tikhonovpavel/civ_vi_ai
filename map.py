@@ -11,6 +11,7 @@ from city import City
 
 radius = 20
 
+random.seed(42)
 
 class TerrainType:
     def __init__(self, name, image_path, cost):

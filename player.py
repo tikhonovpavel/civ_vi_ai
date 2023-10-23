@@ -1,6 +1,6 @@
 import pygame
 
-import rewards_values
+from rewards_values import Rewards
 from city import City
 from rl_training import QLearningAI
 from unit import Unit
@@ -34,20 +34,20 @@ class Player:
     def game_objects(self):
         return self.units + self.cities
 
-    @property
-    def reward(self):
-        return self._reward
+    # @property
+    # def reward(self):
+    #     return self._reward
 
-    @property
-    def reward_cum(self):
-        return self._reward_cum
+    # @property
+    # def reward_cum(self):
+    #     return self._reward_cum
 
-    def add_reward(self, value):
-        self._reward += value
-        self._reward_cum += value
+    # def add_reward(self, value):
+    #     self._reward += value
+    #     self._reward_cum += value
 
-    def reset_reward(self):
-        self._reward = 0
+    # def reset_reward(self):
+    #     self._reward = 0
 
     #
     # @reward.setter
@@ -93,7 +93,7 @@ class Player:
                     unit=game_object,
                     new_state=None,
                     new_state_legal_action=None,  # any action is illegal when you're dead
-                    additional_reward=rewards_values.OWN_UNIT_DESTROYED)
+                    additional_reward=Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
 
         elif game_object in self.cities:
             self.cities.remove(game_object)
@@ -109,7 +109,7 @@ class Player:
                     unit=unit,
                     new_state=None,
                     new_state_legal_action=None,
-                    additional_reward=rewards_values.OWN_CITY_CAPTURED_BY_ENEMY)
+                    additional_reward=Rewards.get_named_reward(Rewards.OWN_CITY_CAPTURED_BY_ENEMY))
         else:
             raise Exception()
 

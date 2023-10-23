@@ -1,7 +1,7 @@
 import math
 import random
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List
 
 import torch
 import numpy as np
@@ -11,7 +11,7 @@ import torch.optim as optim
 
 import torch.nn as nn
 
-import rewards_values
+from rewards_values import Rewards
 from ai import TrainableAI
 
 # playing the following game:
@@ -59,15 +59,51 @@ class PolarCoordinatesLayer(torch.nn.Module):
 
 
 @dataclass
+# class Transition:
+#     game_number: int  
+#     turn_number: int 
+#     movement_number: int  # number of the move of the given unit inside one turn
+#     unit: Unit
+#     s: torch.Tensor
+#     a: int
+#     r: List[Dict[str, int]]  # List of dictionaries to store reasons for rewards
+#     s_next: torch.Tensor | None
+#     legal_actions_s_next: List[int] | None
+
+#     @property
+#     def total_reward(self):
+#         return sum([event[list(event.keys())[0]] for event in self.r])
+
 class Transition:
-    game_number: int
-    turn_number: int
-    unit: Unit
-    s: torch.Tensor
-    a: int
-    r: int
-    s_next: torch.Tensor | None
-    legal_actions_s_next: List[int] | None
+    def __init__(self, 
+                 game_number: int, 
+                 turn_number: int, 
+                 movement_number: int, 
+                 unit, 
+                 s: torch.Tensor, 
+                 a: int, 
+                 r: List[Dict[str, int]], 
+                 s_next: torch.Tensor | None, 
+                 legal_actions_s_next: List[int] | None):
+        
+        # Check if r is a list of dictionaries
+        if not isinstance(r, list) or not all(isinstance(item, dict) for item in r):
+            raise ValueError("r should be a list of dictionaries representing rewards and their reasons.")
+        
+        self.game_number = game_number
+        self.turn_number = turn_number
+        self.movement_number = movement_number
+        self.unit = unit
+        self.s = s
+        self.a = a
+        self.r = r
+        self.s_next = s_next
+        self.legal_actions_s_next = legal_actions_s_next
+
+    @property
+    def total_reward(self):
+        return sum([event[list(event.keys())[0]] for event in self.r])
+
 
 
 class ReplayBuffer:
@@ -75,7 +111,13 @@ class ReplayBuffer:
         self.capacity = capacity
         self.buffer = []
 
+    def filter(self, unit_name):
+        return [rb for rb in self.buffer if rb.unit.name == unit_name]
+
     def add(self, transition: Transition):
+        if transition.unit.name == 'Shell Shock' and transition.turn_number == 3:
+            print('hoba')
+
         if len(self.buffer) > 30:
             print()
         if len(self.buffer) >= self.capacity:
@@ -85,7 +127,7 @@ class ReplayBuffer:
     def sample(self, batch_size: int):
         return random.sample(self.buffer, batch_size)
 
-    def update_new_state_and_reward(self, turn_number, unit, new_state, new_state_legal_action, additional_reward):
+    def update_new_state_and_reward(self, turn_number, unit, new_state, new_state_legal_action, additional_reward: Dict[str, int]):
         """
         Updates the state and reward for the specified unit and turn.
 
@@ -93,33 +135,64 @@ class ReplayBuffer:
         - turn_number (int): The turn number for which the information needs to be updated.
         - unit (Unit): The unit for which the information needs to be updated.
         - new_state (Tensor): The new state to set.
-        - additional_reward (float): Additional reward to be added to the existing one.
+        - additional_reward (Dict[str, int]): Dictionary containing the reason and the amount of the additional reward.
 
         Raises an exception if:
         - No corresponding transition for update is found.
         - More than one candidate for update is found.
         """
 
+        if not isinstance(additional_reward, dict):
+            raise Exception()
+
         candidates_count = 0
         updated = False
         for transition in reversed(self.buffer):
             if transition.turn_number == turn_number and transition.unit == unit and transition.s_next is None:
                 candidates_count += 1
-                if candidates_count > 1:
-                    raise ValueError(f"Multiple candidates found for unit {unit} "
-                                     f"on turn {turn_number} with s_next as None.")
+            if candidates_count > 1:
+                raise ValueError(f"Multiple candidates found for unit {unit} "
+                                 f"on turn {turn_number} with s_next as None.")
 
-                assert transition.s_next is None and transition.legal_actions_s_next is None
+            assert transition.s_next is None and transition.legal_actions_s_next is None
 
-                transition.s_next = new_state
-                transition.legal_actions_s_next = new_state_legal_action
-                transition.r += additional_reward
-                updated = True
-                break
+            transition.s_next = new_state
+            transition.legal_actions_s_next = new_state_legal_action
+            transition.r.append(additional_reward)  # Add the additional reward to the list
+            updated = True
+            break
 
         if not updated:
-            raise ValueError(f"No transition found for unit {unit} on turn {turn_number} with s_next as None.")
+            raise ValueError(f"No transition found for unit {unit} "
+                         f"on turn {turn_number} with s_next as None.")
 
+    def get_unfinished_transitions(self):
+        """
+        Returns transitions for which the reward has not been determined yet.
+        Raises an exception if these transitions are not from the last game or the last turn.
+        """
+        # Проверяем, что буфер не пуст
+        if not self.buffer:
+            raise Exception('Called on the empty buffer')
+
+        # Получаем номер последней игры и последний ход из последнего перехода в буфере
+        last_game_number = self.buffer[-1].game_number
+        last_turn_number = self.buffer[-1].turn_number
+
+        unfinished_transitions = []
+
+        for transition in reversed(self.buffer):
+            # Если награда для перехода не определена, добавляем его в список
+            if transition.r is None:
+                unfinished_transitions.append(transition)
+
+                # Если этот переход не относится к последнему ходу или последней игре, выбрасываем исключение
+                if transition.game_number != last_game_number or transition.turn_number != last_turn_number:
+                    raise ValueError(f"Unfinished transition found for game {transition.game_number} "
+                                     f"and turn {transition.turn_number}, which is not the last game or turn.")
+
+        return unfinished_transitions
+    
 
 class QLearningAI(TrainableAI):
     def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, gamma=0.98,
@@ -186,12 +259,15 @@ class QLearningAI(TrainableAI):
         return self.online_model, self.reference_model
 
     def update_models(self):
-        replay_buffer_sample = self.replay_buffer.sample(len(self.replay_buffer.buffer) // 10)
+        sample_size = min(max(len(self.replay_buffer.buffer) // 10,
+                              50),
+                          len(self.replay_buffer.buffer))
+        replay_buffer_sample = self.replay_buffer.sample(sample_size)
         print(f'Replay Buffer sample size: {len(replay_buffer_sample)}')
 
         states = [transition.s for transition in replay_buffer_sample]
         actions = [transition.a for transition in replay_buffer_sample]
-        rewards = [transition.r for transition in replay_buffer_sample]
+        rewards = [transition.total_reward for transition in replay_buffer_sample]
         next_states = [transition.s_next for transition in replay_buffer_sample]
 
         # Извлекаем legal_actions для следующего состояния из replay_buffer_sample
@@ -291,8 +367,8 @@ class QLearningAI(TrainableAI):
 
             new_state = None
             new_state_legal_actions = None
-
             actions_taken_count = 0
+
             while True:
                 if new_state is None:
                     assert new_state_legal_actions is None
@@ -313,7 +389,7 @@ class QLearningAI(TrainableAI):
                             turn_number=self.game.turn_number - 1,
                             unit=unit,
                             new_state=state,
-                            additional_reward=0,
+                            additional_reward=Rewards.get_named_reward(Rewards.SURVIVED_THE_TURN),
                             new_state_legal_action=legal_actions,)
 
                 else:
@@ -322,10 +398,10 @@ class QLearningAI(TrainableAI):
                     assert new_state_legal_actions is not None
                     legal_actions = new_state_legal_actions
 
-                if len(legal_actions) == 0:
-                    # just stay where we are
-                    unit.path = []
-                    break
+                # if len(legal_actions) == 0:
+                #     # just stay where we are
+                #     unit.path = []
+                #     break
 
                 chosen_action = self.select_action(state, legal_actions)
                 # chosen_action_old = chosen_action
@@ -335,7 +411,7 @@ class QLearningAI(TrainableAI):
                     target_coords = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)[chosen_action]
 
                     # if target_coords == unit_init_coords:
-                    #     player.add_reward(rewards_values.RETURNED_TO_THE_INIT_POSITION)
+                    #     player.add_reward(Rewards.get_named_reward(Rewards.RETURNED_TO_THE_INIT_POSITION))
                 else:
                     # just stay where we are x2
                     print(f'{actions_taken_count + 1}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'
@@ -356,10 +432,22 @@ class QLearningAI(TrainableAI):
                     new_state_legal_actions = self.get_legal_actions(unit)
 
                     if len(new_state_legal_actions) == 0:
-                        print()
+                        # юнит дурак и забрёл непойми куда. Больше он не может ходить на этом тёрне, хотя и остались очки перемещения
+                        # поэтому нам надо оставлять его с None стейтом
+                        player.ai.replay_buffer.add(Transition(game_number=self.game_n,
+                                                               turn_number=self.game.turn_number,
+                                                               movement_number=actions_taken_count,
+                                                               unit=unit,
+                                                               s=state,
+                                                               a=chosen_action,
+                                                               r=reward,
+                                                               s_next=None,
+                                                               legal_actions_s_next=None))
+                        break
 
                     player.ai.replay_buffer.add(Transition(game_number=self.game_n,
                                                            turn_number=self.game.turn_number,
+                                                           movement_number=actions_taken_count,
                                                            unit=unit,
                                                            s=state,
                                                            a=chosen_action,
@@ -373,6 +461,7 @@ class QLearningAI(TrainableAI):
 
                     player.ai.replay_buffer.add(Transition(game_number=self.game_n,
                                                            turn_number=self.game.turn_number,
+                                                           movement_number=actions_taken_count,
                                                            unit=unit,
                                                            s=state,
                                                            a=chosen_action,
@@ -586,7 +675,7 @@ class QLearningAI(TrainableAI):
 #                     target_coords = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)[chosen_action]
 #
 #                     if target_coords == unit_init_coords:
-#                         player.add_reward(rewards_values.RETURNED_TO_THE_INIT_POSITION)
+#                         player.add_reward(Rewards.get_named_reward(Rewards.RETURNED_TO_THE_INIT_POSITION))
 #                 else:
 #                     # just stay where we are x2
 #                     print(f'{count + 1}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'

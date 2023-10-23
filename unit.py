@@ -6,7 +6,7 @@ import random
 
 from line_profiler_pycharm import profile
 
-import rewards_values
+from rewards_values import Rewards
 from city import City
 from game_object import MilitaryObject
 from logger import MoveEvent, CombatAttackEvent, RangedAttackEvent
@@ -90,8 +90,7 @@ class Unit(MilitaryObject):
         # self.sound_movement = pygame.mixer.Sound(sound_movement) if sound_movement else None
 
     def combat_attack(self, game, enemy_r, enemy_c) -> tuple[int, int, int, int]:
-        own_reward = 0
-        enemy_reward = 0
+        own_reward, enemy_reward = [], []
 
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
 
@@ -125,28 +124,28 @@ class Unit(MilitaryObject):
                     if isinstance(u, Unit):
                         enemy_obj.player.destroy(game, u, on_defense=True)
 
-                        self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
-                        own_reward += rewards_values.ENEMY_UNIT_DESTROYED
+                        # self.player.add_reward(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                        own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
 
-                        enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
-                        enemy_reward += rewards_values.OWN_UNIT_DESTROYED
+                        # enemy_obj.player.add_reward(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+                        enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
 
                 enemy_obj.change_ownership(self.player)
 
-                self.player.add_reward(rewards_values.ENEMY_CITY_CAPTURED)
-                own_reward += rewards_values.ENEMY_CITY_CAPTURED
+                # self.player.add_reward(Rewards.get_named_reward(Rewards.ENEMY_CITY_CAPTURED))
+                own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_CITY_CAPTURED))
 
-                enemy_obj.player.add_reward(rewards_values.OWN_CITY_CAPTURED_BY_ENEMY)
-                enemy_reward += rewards_values.OWN_CITY_CAPTURED_BY_ENEMY
+                # enemy_obj.player.add_reward(Rewards.get_named_reward(Rewards.OWN_CITY_CAPTURED_BY_ENEMY))
+                enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_CITY_CAPTURED_BY_ENEMY))
 
             elif isinstance(enemy_obj, Unit):
                 enemy_obj.player.destroy(game, enemy_obj, on_defense=True)  # del enemy_unit
 
-                self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
-                own_reward += rewards_values.ENEMY_UNIT_DESTROYED
+                # self.player.add_reward(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
 
-                enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
-                enemy_reward += rewards_values.OWN_UNIT_DESTROYED
+                # enemy_obj.player.add_reward(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+                enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
             else:
                 raise NotImplementedError()
 
@@ -163,8 +162,8 @@ class Unit(MilitaryObject):
             self.player.destroy(game, self, on_defense=False)
             enemy_obj.hp = max(1, enemy_obj.hp - enemy_unit_damage)
 
-            self.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
-            own_reward += rewards_values.OWN_UNIT_DESTROYED
+            # self.player.add_reward(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+            own_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
 
         else:
             self.hp -= unit_damage
@@ -181,8 +180,8 @@ class Unit(MilitaryObject):
         return unit_damage, enemy_unit_damage, own_reward, enemy_reward
 
     def ranged_attack(self, game, enemy_r, enemy_c):
-        own_reward = 0
-        enemy_reward = 0
+        own_reward = []
+        enemy_reward = []
 
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
         enemy_unit_damage = MilitaryObject.compute_ranged_damage(self, enemy_obj)
@@ -202,11 +201,11 @@ class Unit(MilitaryObject):
                 enemy_obj.player.destroy(game, enemy_obj, on_defense=True)
                 game.map.reset(enemy_obj.r, enemy_obj.c)
 
-                self.player.add_reward(rewards_values.ENEMY_UNIT_DESTROYED)
-                own_reward += rewards_values.ENEMY_UNIT_DESTROYED
+                # self.player.add_reward(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
 
-                enemy_obj.player.add_reward(rewards_values.OWN_UNIT_DESTROYED)
-                enemy_reward += rewards_values.OWN_UNIT_DESTROYED
+                # enemy_obj.player.add_reward(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+                enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
 
                 # game.map.set(enemy_unit.r, enemy_unit.c, [])
             else:
@@ -238,7 +237,7 @@ class Unit(MilitaryObject):
 
     @profile
     def move(self, game) -> int:
-        own_reward, enemy_reward = 0, 0
+        own_reward, enemy_reward = [], []
 
         # if there is just a transition without an attack - the logic is the same for any type of unit
         if len(self.path) == 0 and self.get_ranged_target(game) is None:
@@ -268,8 +267,8 @@ class Unit(MilitaryObject):
                     self.move_unconditionally(game, *avail_path_coords[-2][0])
 
                 unit_damage, enemy_unit_damage, own_rew, enemy_rew = self.combat_attack(game, new_r, new_c)
-                own_reward += own_rew
-                enemy_reward += enemy_rew
+                own_reward.extend(own_rew)
+                enemy_reward.extend(enemy_rew)
 
             else:
                 path_log = [(self.r, self.c)] + [coords for coords, _, _ in avail_path_coords]
@@ -378,8 +377,8 @@ class Unit(MilitaryObject):
             (geom.x - hp_length / 2, geom.y - hp_offset, hp_length, hp_thickness),
             width=1)
 
-    # def __repr__(self):
-    #     return f'{self.name} at {hex(id(self))}'
+    def __repr__(self):
+        return f'{self.name} at {hex(id(self))}'
 
 class Units:
     Tank = lambda player, r, c: Unit('tank', player, r, c,
