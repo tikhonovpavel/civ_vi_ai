@@ -172,6 +172,12 @@ class Unit(MilitaryObject):
             self.hp -= unit_damage
             enemy_obj.hp -= enemy_unit_damage
 
+            own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
+            own_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, unit_damage))
+
+            enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
+            enemy_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, unit_damage))
+
             # -1 to MP because of the attack
             self.mp -= 1  # self.selected = False
 
@@ -216,6 +222,9 @@ class Unit(MilitaryObject):
                 enemy_obj.hp = 0
         else:
             enemy_obj.hp -= enemy_unit_damage
+            
+            own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
+            enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
 
         self.mp = 0
         self.path = []
