@@ -12,17 +12,18 @@ terrains_label_encoder = {cat: i for i, cat in enumerate(terrain_classes)}
 
 class AI:
 
-    def __init__(self, game, player):
+    def __init__(self, game, player, silent=False):
         # self.player = player
         self.game = game
         self.player = player
+        self.silent = silent
 
     def create_paths(self):
         pass
 
 class TrainableAI(AI):
-    def __init__(self, game, player):
-        super(TrainableAI, self).__init__(game, player)
+    def __init__(self, game, player, silent=False):
+        super(TrainableAI, self).__init__(game, player, silent)
 
     def create_paths(self):
         raise NotImplementedError()
@@ -118,8 +119,8 @@ class TrainableAI(AI):
 
 
 class DoNothingAI(AI):
-    def __init__(self, game, player):
-        super(DoNothingAI, self).__init__(game, player)
+    def __init__(self, game, player, silent=False):
+        super(DoNothingAI, self).__init__(game, player, silent)
 
     def create_paths(self):
         pass
@@ -131,8 +132,8 @@ class SimpleAI(AI):
 
     """
 
-    def __init__(self, game, player):
-        super(SimpleAI, self).__init__(game, player)
+    def __init__(self, game, player, silent=False):
+        super(SimpleAI, self).__init__(game, player, silent)
 
     def create_paths(self):
         player = self.player
@@ -156,8 +157,8 @@ class SimpleAIHikikomori(AI):
 
     """
 
-    def __init__(self, game, player, max_distance_from_enemy=3):
-        super(SimpleAIHikikomori, self).__init__(game, player)
+    def __init__(self, game, player, max_distance_from_enemy=3, silent=False):
+        super(SimpleAIHikikomori, self).__init__(game, player, silent)
         self.max_distance_from_enemy = max_distance_from_enemy
 
     def create_paths(self):

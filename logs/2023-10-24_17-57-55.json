@@ -1,0 +1,379 @@
+{
+  "turns": [
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T17:58:01.035471",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              3,
+              2
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Strife Striker",
+            "event_type": "move",
+            "path": [
+              [
+                3,
+                2
+              ],
+              [
+                4,
+                3
+              ],
+              [
+                5,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T17:58:01.036000",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              5,
+              1
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Rampage Ranger",
+            "event_type": "move",
+            "path": [
+              [
+                5,
+                1
+              ],
+              [
+                7,
+                1
+              ],
+              [
+                9,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T17:58:01.036300",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              9,
+              1
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Rampage Ranger",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Shockwave Spitter",
+                "location": [
+                  11,
+                  1
+                ],
+                "category": "artillery"
+              }
+            },
+            "unit_damage": 15,
+            "enemy_damage": 44
+          }
+        },
+        {
+          "timestamp": "2023-10-24T17:58:01.036911",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              6,
+              1
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Shield Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                6,
+                1
+              ],
+              [
+                8,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T17:58:01.037119",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              8,
+              1
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Shield Shredder",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Shockwave Spitter",
+                "location": [
+                  11,
+                  1
+                ],
+                "category": "artillery"
+              }
+            },
+            "unit_damage": 18,
+            "enemy_damage": 49
+          }
+        },
+        {
+          "timestamp": "2023-10-24T17:58:01.037603",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              4,
+              2
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Blaze Brute",
+            "event_type": "move",
+            "path": [
+              [
+                4,
+                2
+              ],
+              [
+                6,
+                2
+              ],
+              [
+                8,
+                2
+              ],
+              [
+                10,
+                2
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "map_size": [
+    16,
+    5
+  ],
+  "map": [
+    [
+      "hills",
+      "plains",
+      "plains",
+      "plains",
+      "hills"
+    ],
+    [
+      "hills",
+      "forest",
+      "plains",
+      "plains",
+      "plains"
+    ],
+    [
+      "plains",
+      "hills",
+      "plains",
+      "plains",
+      "hills"
+    ],
+    [
+      "hills",
+      "plains",
+      "hills",
+      "forest",
+      "plains"
+    ],
+    [
+      "forest",
+      "hills",
+      "plains",
+      "plains",
+      "forest"
+    ],
+    [
+      "plains",
+      "plains",
+      "plains",
+      "forest",
+      "hills"
+    ],
+    [
+      "forest",
+      "hills",
+      "hills",
+      "forest",
+      "plains"
+    ],
+    [
+      "hills",
+      "forest",
+      "hills",
+      "forest",
+      "hills"
+    ],
+    [
+      "hills",
+      "plains",
+      "plains",
+      "plains",
+      "plains"
+    ],
+    [
+      "plains",
+      "plains",
+      "plains",
+      "hills",
+      "plains"
+    ],
+    [
+      "plains",
+      "plains",
+      "plains",
+      "forest",
+      "hills"
+    ],
+    [
+      "hills",
+      "plains",
+      "hills",
+      "plains",
+      "plains"
+    ],
+    [
+      "forest",
+      "hills",
+      "hills",
+      "hills",
+      "forest"
+    ],
+    [
+      "forest",
+      "plains",
+      "plains",
+      "plains",
+      "plains"
+    ],
+    [
+      "plains",
+      "forest",
+      "forest",
+      "plains",
+      "hills"
+    ],
+    [
+      "plains",
+      "forest",
+      "plains",
+      "plains",
+      "plains"
+    ]
+  ],
+  "initial_positions": [
+    {
+      "nation": "Egypt",
+      "units": [
+        {
+          "type": "tank",
+          "coords": [
+            7,
+            4
+          ]
+        },
+        {
+          "type": "tank",
+          "coords": [
+            12,
+            2
+          ]
+        },
+        {
+          "type": "artillery",
+          "coords": [
+            8,
+            4
+          ]
+        },
+        {
+          "type": "artillery",
+          "coords": [
+            11,
+            3
+          ]
+        },
+        {
+          "type": "artillery",
+          "coords": [
+            13,
+            2
+          ]
+        },
+        {
+          "type": "artillery",
+          "coords": [
+            11,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "nation": "Rome",
+      "units": [
+        {
+          "type": "artillery",
+          "coords": [
+            3,
+            2
+          ]
+        },
+        {
+          "type": "tank",
+          "coords": [
+            5,
+            1
+          ]
+        },
+        {
+          "type": "tank",
+          "coords": [
+            6,
+            1
+          ]
+        },
+        {
+          "type": "tank",
+          "coords": [
+            4,
+            2
+          ]
+        }
+      ]
+    }
+  ]
+}

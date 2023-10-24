@@ -20,14 +20,15 @@ def main():
     clock = pygame.time.Clock()
     clock.tick(60)
 
-    with open('init_states/1vs1_easy2.json', 'r', encoding='utf-8') as f:
+    with open('init_states/training_configs/1vs1_easy.json', 'r', encoding='utf-8') as f:
+    # with open('init_states/1vs1_easy2.json', 'r', encoding='utf-8') as f:
     # with open('init_states/1vs1vs1.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
 
     game = Game(config, screen, clock)
     for p in game.players:
         if isinstance(p.ai, QLearningAI):
-            p.ai.init_models(None)
+            p.ai.init(1, None, None)
     game.start()
 
     # Run the game loop

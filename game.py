@@ -54,7 +54,7 @@ class Game:
 
     # @log("Start new game")
     @profile
-    def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=5, silent=False) -> None:
+    def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=30, silent=False) -> None:
 
 
         self._is_started = False
@@ -235,9 +235,6 @@ class Game:
         if self.check_winning_conditions(current_player):
             return
 
-        self.subturn_number += 1
-        if self.subturn_number % len(self.players) == 0:
-            self.turn_number += 1
 
         for obj in current_player.game_objects:
             obj.move(self)
@@ -263,11 +260,11 @@ class Game:
         self.logger.start_turn(current_player.nation)
 
         # get the rewards
-        if isinstance(current_player.ai, TrainableAI):
-            if self.turn_number != 1:  # then there has been at least 1 call of create_paths
-                                       # and the other players also finished their first turn
-                current_player.ai.receive_reward(current_player.reward)
-                current_player.reset_reward()
+        # if isinstance(current_player.ai, TrainableAI):
+        #     if self.turn_number != 1:  # then there has been at least 1 call of create_paths
+        #                                # and the other players also finished their first turn
+        #         current_player.ai.receive_reward(current_player.reward)
+        #         current_player.reset_reward()
 
         self.current_turn_text.update(turn_number=self.turn_number)
         self.current_player_text.update(current_player=current_player.nation)
@@ -283,6 +280,11 @@ class Game:
             self.next_turn()
         else:
             self._autoplay_turns_counter = 0
+
+        
+        self.subturn_number += 1
+        if self.subturn_number % len(self.players) == 0:
+            self.turn_number += 1
 
     def mouse_motion(self, event):
         x, y = event.pos

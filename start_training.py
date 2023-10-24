@@ -9,7 +9,11 @@ from rl_training import QLearningAI
 from rewards_values import Rewards
 
 from line_profiler_pycharm import profile
+import pygame
 
+
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 900
 
 class TrainingSession:
     def __init__(self, silent=False, n_games=500, episode_max_length=10):
@@ -21,15 +25,21 @@ class TrainingSession:
     @profile
     def start_training(self):
 
-        n_games = 500
-        episode_max_length = 10
+        pygame.init()
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.fill((255, 255, 255))
+        clock = pygame.time.Clock()
+        clock.tick(60)
 
-        with open('init_states/training_configs/1vs1_easy.json', 'r', encoding='utf-8') as f:
+        n_games = self.n_games
+        episode_max_length = self.episode_max_length
+
+        with open('init_states/training_configs/1vs1_very_easy.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
         models, replay_buffer = None, None
         for i in tqdm(range(1, n_games)):
-            game = Game(config, None, None, sound_on=False,
+            game = Game(config, screen, None, sound_on=False,
                     autoplay=True, autoplay_max_turns=episode_max_length, silent=self.silent)
             models, replay_buffer = game.players[0].ai.init(i, *(models, replay_buffer))
 
@@ -40,6 +50,7 @@ class TrainingSession:
             game.turn_number = 1
             game.subturn_number = 0
             while True:
+                # continue
                 current_player = game.get_current_player()
 
                 if not self.silent:

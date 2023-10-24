@@ -57,7 +57,7 @@ class PolarCoordinatesLayer(torch.nn.Module):
 class QLearningAI(TrainableAI):
     def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, gamma=0.98,
                  reference_model_update_interval=5, max_replay_buffer_sample=200, device='cpu', silent=False):
-        super(QLearningAI, self).__init__(game, player)
+        super(QLearningAI, self).__init__(game, player, silent)
         self.optimizer = None
         self.max_distance_from_enemy = max_distance_from_enemy
 
@@ -96,8 +96,6 @@ class QLearningAI(TrainableAI):
 
         self.replay_buffer = None
         self.max_replay_buffer_sample = max_replay_buffer_sample
-
-        self.silent = silent
 
     def init(self, game_n, *init_objects):
         models, replay_buffer = init_objects
@@ -250,7 +248,7 @@ class QLearningAI(TrainableAI):
         for i, unit in reversed(list(enumerate(player.units))):
 
             if not self.silent:
-                print(f'Creating paths for <{unit}>. hp={unit.hp}, mp={unit.mp}')
+                print(f'Creating paths for <{unit}> (turn {self.game.turn_number}). hp={unit.hp}, mp={unit.mp}')
 
             new_state = None
             new_state_legal_actions = None
