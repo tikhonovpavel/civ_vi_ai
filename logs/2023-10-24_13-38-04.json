@@ -1,0 +1,3494 @@
+{
+  "turns": [
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.201430",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              11,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                11,
+                1
+              ],
+              [
+                12,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.208334",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              2
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                2
+              ],
+              [
+                14,
+                2
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.251462",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              3,
+              2
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Strife Striker",
+            "event_type": "move",
+            "path": [
+              [
+                3,
+                2
+              ],
+              [
+                4,
+                3
+              ],
+              [
+                5,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.251599",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              5,
+              1
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Rampage Ranger",
+            "event_type": "move",
+            "path": [
+              [
+                5,
+                1
+              ],
+              [
+                6,
+                2
+              ],
+              [
+                8,
+                2
+              ],
+              [
+                10,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.251708",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              6,
+              1
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Shield Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                6,
+                1
+              ],
+              [
+                8,
+                1
+              ],
+              [
+                10,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.251775",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              10,
+              1
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Shield Shredder",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Shockwave Spitter",
+                "location": [
+                  12,
+                  1
+                ],
+                "category": "artillery"
+              }
+            },
+            "unit_damage": 17,
+            "enemy_damage": 55
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.251922",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              4,
+              2
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Blaze Brute",
+            "event_type": "move",
+            "path": [
+              [
+                4,
+                2
+              ],
+              [
+                6,
+                2
+              ],
+              [
+                8,
+                2
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.259366",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              12,
+              1
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                1
+              ],
+              [
+                13,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.263128",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              0
+            ],
+            "hp": 45,
+            "mp": 1,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.266693",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              2
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                2
+              ],
+              [
+                15,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.273364",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              11,
+              3
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                11,
+                3
+              ],
+              [
+                12,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.276968",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              12,
+              3
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                3
+              ],
+              [
+                13,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.281320",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                8,
+                4
+              ],
+              [
+                9,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.285763",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              9,
+              3
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                9,
+                3
+              ],
+              [
+                11,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.289414",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              12,
+              2
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                2
+              ],
+              [
+                13,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.292822",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              13,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                1
+              ],
+              [
+                14,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.296475",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              1
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                1
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.299948",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              7,
+              4
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Metal Maelstrom",
+            "event_type": "move",
+            "path": [
+              [
+                7,
+                4
+              ],
+              [
+                8,
+                4
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.303373",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Metal Maelstrom",
+            "event_type": "move",
+            "path": [
+              [
+                8,
+                4
+              ],
+              [
+                9,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.306813",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              9,
+              3
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Metal Maelstrom",
+            "event_type": "move",
+            "path": [
+              [
+                9,
+                3
+              ],
+              [
+                8,
+                3
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.329800",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              5,
+              3
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Strife Striker",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Metal Maelstrom",
+              "location": [
+                8,
+                3
+              ],
+              "category": "tank"
+            },
+            "enemy_damage": 38
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.329899",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              10,
+              2
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Rampage Ranger",
+            "event_type": "move",
+            "path": [
+              [
+                10,
+                2
+              ],
+              [
+                9,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.329991",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              9,
+              2
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Rampage Ranger",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Metal Maelstrom",
+                "location": [
+                  8,
+                  3
+                ],
+                "category": "tank"
+              }
+            },
+            "unit_damage": 30,
+            "enemy_damage": 28
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.330117",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              10,
+              1
+            ],
+            "hp": 83,
+            "mp": 4,
+            "name": "Shield Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                10,
+                1
+              ],
+              [
+                11,
+                0
+              ],
+              [
+                13,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.330231",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              8,
+              2
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Blaze Brute",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Metal Maelstrom",
+                "location": [
+                  8,
+                  3
+                ],
+                "category": "tank"
+              }
+            },
+            "unit_damage": 25,
+            "enemy_damage": 30
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.341264",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                12,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.345637",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              12,
+              0
+            ],
+            "hp": 45,
+            "mp": 0,
+            "name": "Shockwave Spitter",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Shield Shredder",
+              "location": [
+                13,
+                0
+              ],
+              "category": "tank"
+            },
+            "enemy_damage": 31
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.349440",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                1
+              ],
+              [
+                14,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.353618",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              1
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Ballistic Bane",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Shield Shredder",
+              "location": [
+                13,
+                0
+              ],
+              "category": "tank"
+            },
+            "enemy_damage": 41
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.357097",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              2
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                2
+              ],
+              [
+                14,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.360450",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              2
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                2
+              ],
+              [
+                15,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.364076",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              11,
+              3
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                11,
+                3
+              ],
+              [
+                13,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.367511",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              3
+            ],
+            "hp": 100,
+            "mp": 2,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                3
+              ],
+              [
+                14,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.370930",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              3
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.374728",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 100,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.378869",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.385477",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 100,
+            "mp": 2,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.390677",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.395475",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              8,
+              3
+            ],
+            "hp": 4,
+            "mp": 4,
+            "name": "Metal Maelstrom",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Rampage Ranger",
+                "location": [
+                  9,
+                  2
+                ],
+                "category": "tank"
+              }
+            },
+            "unit_damage": 36,
+            "enemy_damage": 35
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.424702",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              5,
+              3
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Strife Striker",
+            "event_type": "move",
+            "path": [
+              [
+                5,
+                3
+              ],
+              [
+                6,
+                4
+              ],
+              [
+                8,
+                4
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.424841",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              9,
+              2
+            ],
+            "hp": 35,
+            "mp": 4,
+            "name": "Rampage Ranger",
+            "event_type": "move",
+            "path": [
+              [
+                9,
+                2
+              ],
+              [
+                11,
+                2
+              ],
+              [
+                13,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.424904",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              13,
+              2
+            ],
+            "hp": 35,
+            "mp": 4,
+            "name": "Rampage Ranger",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Thunder Tosser",
+                "location": [
+                  15,
+                  2
+                ],
+                "category": "artillery"
+              }
+            },
+            "unit_damage": 16,
+            "enemy_damage": 55
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.425056",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              13,
+              0
+            ],
+            "hp": 11,
+            "mp": 4,
+            "name": "Shield Shredder",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Shell Shock",
+                "location": [
+                  15,
+                  0
+                ],
+                "category": "tank"
+              }
+            },
+            "unit_damage": 27,
+            "enemy_damage": 28
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.425261",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              8,
+              2
+            ],
+            "hp": 75,
+            "mp": 4,
+            "name": "Blaze Brute",
+            "event_type": "move",
+            "path": [
+              [
+                8,
+                2
+              ],
+              [
+                9,
+                2
+              ],
+              [
+                11,
+                2
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.443471",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              12,
+              0
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.447221",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                12,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.450755",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                1
+              ],
+              [
+                15,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.457662",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              2
+            ],
+            "hp": 45,
+            "mp": 0,
+            "name": "Thunder Tosser",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Rampage Ranger",
+              "location": [
+                13,
+                2
+              ],
+              "category": "tank"
+            },
+            "enemy_damage": 36
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.461142",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                13,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.465489",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              3
+            ],
+            "hp": 100,
+            "mp": 2,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.470191",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                13,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.474366",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.478042",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 3,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.481506",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 2,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.484974",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 1,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.508485",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Strife Striker",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Cairo",
+              "location": [
+                12,
+                4
+              ],
+              "category": "city"
+            },
+            "enemy_damage": 22
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.508583",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              11,
+              2
+            ],
+            "hp": 75,
+            "mp": 4,
+            "name": "Blaze Brute",
+            "event_type": "move",
+            "path": [
+              [
+                11,
+                2
+              ],
+              [
+                12,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.508666",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              12,
+              3
+            ],
+            "hp": 75,
+            "mp": 4,
+            "name": "Blaze Brute",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Shell Shredder",
+                "location": [
+                  13,
+                  3
+                ],
+                "category": "artillery"
+              }
+            },
+            "unit_damage": 19,
+            "enemy_damage": 49
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.526589",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              12,
+              0
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.530260",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                12,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.534944",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                1
+              ],
+              [
+                14,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.542265",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              2
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                2
+              ],
+              [
+                13,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.545892",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              2
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                2
+              ],
+              [
+                14,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.549342",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              3
+            ],
+            "hp": 45,
+            "mp": 1,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.552789",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              3
+            ],
+            "hp": 51,
+            "mp": 3,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                3
+              ],
+              [
+                14,
+                4
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.556115",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              4
+            ],
+            "hp": 51,
+            "mp": 1,
+            "name": "Shell Shredder",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                4
+              ],
+              [
+                13,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.559417",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                13,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.563250",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              13,
+              0
+            ],
+            "hp": 72,
+            "mp": 2,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.568973",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 1,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.595740",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Strife Striker",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Cairo",
+              "location": [
+                12,
+                4
+              ],
+              "category": "city"
+            },
+            "enemy_damage": 20
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.595849",
+          "eventType": "combat_attack",
+          "details": {
+            "category": "tank",
+            "location": [
+              12,
+              3
+            ],
+            "hp": 56,
+            "mp": 4,
+            "name": "Blaze Brute",
+            "event_type": "combat_attack",
+            "target": {
+              "target": {
+                "name": "Shell Shredder",
+                "location": [
+                  13,
+                  3
+                ],
+                "category": "artillery"
+              }
+            },
+            "unit_damage": 17,
+            "enemy_damage": 51
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.595983",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              12,
+              3
+            ],
+            "hp": 39,
+            "mp": 4,
+            "name": "Blaze Brute",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                3
+              ],
+              [
+                13,
+                3
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.616982",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              12,
+              0
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                0
+              ],
+              [
+                13,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.620444",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              0
+            ],
+            "hp": 45,
+            "mp": 1,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.624044",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                1
+              ],
+              [
+                15,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.627990",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              1
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                1
+              ],
+              [
+                13,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.631823",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                14,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.635919",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              3
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.639590",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 45,
+            "mp": 0,
+            "name": "Thunder Tosser",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Blaze Brute",
+              "location": [
+                13,
+                3
+              ],
+              "category": "tank"
+            },
+            "enemy_damage": 40
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.643084",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                12,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.646652",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              12,
+              0
+            ],
+            "hp": 72,
+            "mp": 2,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.675409",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Strife Striker",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Cairo",
+              "location": [
+                12,
+                4
+              ],
+              "category": "city"
+            },
+            "enemy_damage": 29
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.698110",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                13,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.704776",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                1
+              ],
+              [
+                15,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.708058",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              1
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                1
+              ],
+              [
+                13,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.711432",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                14,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.714800",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              3
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.718333",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 45,
+            "mp": 1,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                13,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.723180",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.727140",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 3,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.730746",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 2,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.734196",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 1,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.762871",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Strife Striker",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Cairo",
+              "location": [
+                12,
+                4
+              ],
+              "category": "city"
+            },
+            "enemy_damage": 25
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.789113",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              0
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.792668",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                13,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.796336",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                1
+              ],
+              [
+                15,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.799785",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              1
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                1
+              ],
+              [
+                13,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.803298",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              3
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.806666",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                14,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.810038",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              3
+            ],
+            "hp": 45,
+            "mp": 1,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.814689",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.819828",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 3,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.823476",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 2,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.826944",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 1,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.858716",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Strife Striker",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Cairo",
+              "location": [
+                12,
+                4
+              ],
+              "category": "city"
+            },
+            "enemy_damage": 28
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.887415",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              0
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.891437",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                13,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.895861",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                1
+              ],
+              [
+                15,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.900200",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              1
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                1
+              ],
+              [
+                13,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.903923",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                14,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.907622",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              3
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.915783",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.919895",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 3,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.923274",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 2,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.926545",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              15,
+              0
+            ],
+            "hp": 72,
+            "mp": 1,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.962230",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Strife Striker",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Cairo",
+              "location": [
+                12,
+                4
+              ],
+              "category": "city"
+            },
+            "enemy_damage": 28
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Egypt",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:04.995892",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              0
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                0
+              ],
+              [
+                14,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:04.999388",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              1
+            ],
+            "hp": 45,
+            "mp": 1,
+            "name": "Shockwave Spitter",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                1
+              ],
+              [
+                15,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:05.004130",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              13,
+              1
+            ],
+            "hp": 100,
+            "mp": 3,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                13,
+                1
+              ],
+              [
+                15,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:05.009046",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              1
+            ],
+            "hp": 100,
+            "mp": 1,
+            "name": "Ballistic Bane",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                1
+              ],
+              [
+                13,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:05.012979",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 45,
+            "mp": 3,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                14,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:05.016470",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              14,
+              3
+            ],
+            "hp": 45,
+            "mp": 2,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                3
+              ],
+              [
+                15,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:05.019864",
+          "eventType": "move",
+          "details": {
+            "category": "artillery",
+            "location": [
+              15,
+              3
+            ],
+            "hp": 45,
+            "mp": 1,
+            "name": "Thunder Tosser",
+            "event_type": "move",
+            "path": [
+              [
+                15,
+                3
+              ],
+              [
+                14,
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:05.023305",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              14,
+              0
+            ],
+            "hp": 72,
+            "mp": 4,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                14,
+                0
+              ],
+              [
+                12,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "timestamp": "2023-10-24T13:38:05.026640",
+          "eventType": "move",
+          "details": {
+            "category": "tank",
+            "location": [
+              12,
+              0
+            ],
+            "hp": 72,
+            "mp": 2,
+            "name": "Shell Shock",
+            "event_type": "move",
+            "path": [
+              [
+                12,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turnNation": "Rome",
+      "events": [
+        {
+          "timestamp": "2023-10-24T13:38:05.066205",
+          "eventType": "ranged_attack",
+          "details": {
+            "category": "artillery",
+            "location": [
+              8,
+              4
+            ],
+            "hp": 100,
+            "mp": 0,
+            "name": "Strife Striker",
+            "event_type": "ranged_attack",
+            "target": {
+              "name": "Cairo",
+              "location": [
+                12,
+                4
+              ],
+              "category": "city"
+            },
+            "enemy_damage": 25
+          }
+        }
+      ]
+    }
+  ],
+  "map_size": [
+    16,
+    5
+  ],
+  "map": [
+    [
+      "hills",
+      "plains",
+      "plains",
+      "plains",
+      "hills"
+    ],
+    [
+      "hills",
+      "forest",
+      "plains",
+      "plains",
+      "plains"
+    ],
+    [
+      "plains",
+      "hills",
+      "plains",
+      "plains",
+      "hills"
+    ],
+    [
+      "hills",
+      "plains",
+      "hills",
+      "forest",
+      "plains"
+    ],
+    [
+      "forest",
+      "hills",
+      "plains",
+      "plains",
+      "forest"
+    ],
+    [
+      "plains",
+      "plains",
+      "plains",
+      "forest",
+      "hills"
+    ],
+    [
+      "forest",
+      "hills",
+      "hills",
+      "forest",
+      "plains"
+    ],
+    [
+      "hills",
+      "forest",
+      "hills",
+      "forest",
+      "hills"
+    ],
+    [
+      "hills",
+      "plains",
+      "plains",
+      "plains",
+      "plains"
+    ],
+    [
+      "plains",
+      "plains",
+      "plains",
+      "hills",
+      "plains"
+    ],
+    [
+      "plains",
+      "plains",
+      "plains",
+      "forest",
+      "hills"
+    ],
+    [
+      "hills",
+      "plains",
+      "hills",
+      "plains",
+      "plains"
+    ],
+    [
+      "forest",
+      "hills",
+      "hills",
+      "hills",
+      "forest"
+    ],
+    [
+      "forest",
+      "plains",
+      "plains",
+      "plains",
+      "plains"
+    ],
+    [
+      "plains",
+      "forest",
+      "forest",
+      "plains",
+      "hills"
+    ],
+    [
+      "plains",
+      "forest",
+      "plains",
+      "plains",
+      "plains"
+    ]
+  ],
+  "initial_positions": [
+    {
+      "nation": "Egypt",
+      "units": [
+        {
+          "type": "tank",
+          "coords": [
+            7,
+            4
+          ]
+        },
+        {
+          "type": "tank",
+          "coords": [
+            12,
+            2
+          ]
+        },
+        {
+          "type": "artillery",
+          "coords": [
+            8,
+            4
+          ]
+        },
+        {
+          "type": "artillery",
+          "coords": [
+            11,
+            3
+          ]
+        },
+        {
+          "type": "artillery",
+          "coords": [
+            13,
+            2
+          ]
+        },
+        {
+          "type": "artillery",
+          "coords": [
+            11,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "nation": "Rome",
+      "units": [
+        {
+          "type": "artillery",
+          "coords": [
+            3,
+            2
+          ]
+        },
+        {
+          "type": "tank",
+          "coords": [
+            5,
+            1
+          ]
+        },
+        {
+          "type": "tank",
+          "coords": [
+            6,
+            1
+          ]
+        },
+        {
+          "type": "tank",
+          "coords": [
+            4,
+            2
+          ]
+        }
+      ]
+    }
+  ]
+}

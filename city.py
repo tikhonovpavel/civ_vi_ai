@@ -13,11 +13,11 @@ class City(MilitaryObject):
     MAX_WALLS_HP = 100
 
     def __init__(self, name, player, center_r, center_c, territory, hp=None, image_path='assets/city_icon1.png',
-                 combat_strength_base=95, ranged_strength_base=95, range_radius_base=2):
+                 combat_strength_base=95, ranged_strength_base=95, range_radius_base=2, silent=False):
         super().__init__(name, 'city', player, center_r, center_c, role=MilitaryObject.RANGED,
                          mp_base=0, hp=hp, combat_strength_base=combat_strength_base,
                          ranged_strength_base=ranged_strength_base, range_radius_base=range_radius_base,
-                         sound_attack='assets/sounds/artillery_attack.ogg')
+                         sound_attack='assets/sounds/artillery_attack.ogg', silent=silent)
 
         assert center_r, center_c in territory
 
@@ -35,6 +35,8 @@ class City(MilitaryObject):
         self.walls_hp = City.MAX_WALLS_HP
 
         self._territory = set(tuple(x) for x in territory)
+
+        # self.silent = silent
 
     @property
     def territory(self):
@@ -57,10 +59,11 @@ class City(MilitaryObject):
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
         enemy_obj_damage = MilitaryObject.compute_ranged_damage(self, enemy_obj)
 
-        print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
-              f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
-              f"HP: ({self.hp} -> {max(0, self.hp)}) / "
-              f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_obj_damage)})")
+        if not self.silent:
+            print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
+                  f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r,      enemy_obj.c}. "      
+                  f"HP: ({self.hp} -> {max(0, self.hp)}) / "
+                  f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_obj_damage)})")
 
         if game.sound_marker.state and self.sound_attack:
             self.sound_attack.play(maxtime=1500, fade_ms=500)

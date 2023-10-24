@@ -54,10 +54,12 @@ class Game:
 
     # @log("Start new game")
     @profile
-    def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=5,) -> None:
+    def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=5, silent=False) -> None:
 
 
         self._is_started = False
+
+        self.silent = silent
 
         # player1 = Player('Rome')
         # player1.ai = SimpleAI(self, player1)
@@ -84,10 +86,10 @@ class Game:
             self.map = Map(30, 15)
 
         for p in config['players']:
-            player = Player(p['nation'])
+            player = Player(p['nation'], silent=silent)
 
             if 'ai' in p and p['ai']:
-                player.ai = globals()[p['ai']](self, player)
+                player.ai = globals()[p['ai']](self, player, silent=self.silent)
 
             self.players.append(player)
 
@@ -97,7 +99,7 @@ class Game:
                 city_dict['center_r'], city_dict['center_c'] = r, c
                 city_dict['player'] = player
 
-                city = City(**city_dict)
+                city = City(**city_dict, silent=silent)
                 try:
                     self.add_game_obj(player, city)
                 except:
@@ -105,7 +107,7 @@ class Game:
 
                 for u in p.get('units', list()):
                     u['player'] = player
-                    unit = Unit(**u)
+                    unit = Unit(**u, silent=silent)
                     self.add_game_obj(player, unit)
 
         self._current_player_index = 0

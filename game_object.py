@@ -15,7 +15,7 @@ class MilitaryObject:
 
     def __init__(self, name, category, player, r, c, role, mp_base,
                  combat_strength_base, ranged_strength_base, range_radius_base, hp=None, mp=None,
-                 modifiers=None, path=None, sound_attack=None, sound_movement=None):
+                 modifiers=None, path=None, sound_attack=None, sound_movement=None, silent=False):
 
         self.path = [] if path is None else path
 
@@ -56,6 +56,8 @@ class MilitaryObject:
         # self.sound_movement = pygame.mixer.Sound(sound_movement)
 
         self.is_selected = False
+        
+        self.silent = silent
 
     @property
     def player(self):

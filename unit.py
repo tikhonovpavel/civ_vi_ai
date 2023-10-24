@@ -69,7 +69,7 @@ names = {
 class Unit(MilitaryObject):
     def __init__(self, category, player, r, c, role, image_path,
                  mp_base, combat_strength_base, ranged_strength_base, range_radius_base, hp=None, mp=None, path=None,
-                 modifiers=None, sound_attack=None, sound_movement=None, name=None) -> None:
+                 modifiers=None, sound_attack=None, sound_movement=None, name=None, silent=False) -> None:
 
         if name is None:
             name = next(names[category], None)
@@ -77,7 +77,7 @@ class Unit(MilitaryObject):
         super().__init__(name, category, player, r, c, role, mp_base, combat_strength_base,
                          ranged_strength_base=ranged_strength_base,
                          range_radius_base=range_radius_base, modifiers=modifiers, hp=hp, path=path,
-                         sound_attack=sound_attack, sound_movement=sound_movement)
+                         sound_attack=sound_attack, sound_movement=sound_movement, silent=silent)
         self.image_path = image_path
 
         image = pygame.image.load(image_path)
@@ -88,6 +88,8 @@ class Unit(MilitaryObject):
 
         # self.sound_attack = pygame.mixer.Sound(sound_attack) if sound_attack else None
         # self.sound_movement = pygame.mixer.Sound(sound_movement) if sound_movement else None
+
+        # self.silent = silent
 
     def combat_attack(self, game, enemy_r, enemy_c) -> tuple[int, int, int, int]:
         own_reward, enemy_reward = [], []
@@ -102,10 +104,11 @@ class Unit(MilitaryObject):
                                                 unit_damage=unit_damage,
                                                 enemy_damage=enemy_unit_damage))
 
-        print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
-              f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
-              f"HP: ({self.hp} -> {max(0, self.hp - unit_damage)}) / "
-              f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_unit_damage)})")
+        if not self.silent:
+            print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
+                  f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
+                  f"HP: ({self.hp} -> {max(0, self.hp - unit_damage)}) / "
+                  f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_unit_damage)})")
 
         unit_r, unit_c = self.r, self.c
         enemy_unit_r, enemy_unit_c = enemy_obj.r, enemy_obj.c
@@ -186,10 +189,11 @@ class Unit(MilitaryObject):
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
         enemy_unit_damage = MilitaryObject.compute_ranged_damage(self, enemy_obj)
 
-        print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
-              f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
-              f"HP: ({self.hp} -> {max(0, self.hp)}) / "
-              f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_unit_damage)})")
+        if not self.silent:
+            print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
+                  f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
+                  f"HP: ({self.hp} -> {max(0, self.hp)}) / "
+                  f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_unit_damage)})")
 
         if game.sound_marker.state and self.sound_attack:
             self.sound_attack.play(maxtime=1500, fade_ms=500)

@@ -38,14 +38,14 @@ class ReplayBuffer:
 
     def add(self, transition: Transition):
 
-        if any(r.get('OWN_UNIT_DESTROYED', None) is not None for r in transition.r) and transition.unit.name == 'Shockwave Spitter':
-            print()
+        # if any(r.get('OWN_UNIT_DESTROYED', None) is not None for r in transition.r) and transition.unit.name == 'Shockwave Spitter':
+        #     print()
 
-        if transition.unit.name == 'Shell Shock' and transition.turn_number == 3:
-            print('hoba')
+        # if transition.unit.name == 'Shell Shock' and transition.turn_number == 3:
+        #     print('hoba')
 
-        if len(self.buffer) > 30:
-            print()
+        # if len(self.buffer) > 30:
+        #     print()
         if len(self.buffer) >= self.capacity:
             self.buffer.pop(0)
         self.buffer.append(transition)

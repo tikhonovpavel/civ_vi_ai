@@ -56,7 +56,7 @@ class PolarCoordinatesLayer(torch.nn.Module):
 
 class QLearningAI(TrainableAI):
     def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, gamma=0.98,
-                 reference_model_update_interval=5, device='cpu'):
+                 reference_model_update_interval=5, max_replay_buffer_sample=200, device='cpu', silent=False):
         super(QLearningAI, self).__init__(game, player)
         self.optimizer = None
         self.max_distance_from_enemy = max_distance_from_enemy
@@ -95,6 +95,9 @@ class QLearningAI(TrainableAI):
         self.__replay_buffer_lambda = lambda: ReplayBuffer(capacity=500)
 
         self.replay_buffer = None
+        self.max_replay_buffer_sample = max_replay_buffer_sample
+
+        self.silent = silent
 
     def init(self, game_n, *init_objects):
         models, replay_buffer = init_objects
@@ -126,9 +129,11 @@ class QLearningAI(TrainableAI):
         return (self.online_model, self.reference_model), self.replay_buffer
 
     def update_models(self):
-        sample_size = min(max(len(self.replay_buffer.buffer) // 10, 50), len(self.replay_buffer.buffer))
+        sample_size = min(max(len(self.replay_buffer.buffer) // 10, self.max_replay_buffer_sample), len(self.replay_buffer.buffer))
         replay_buffer_sample = self.replay_buffer.sample(sample_size)
-        print(f'Replay Buffer sample size: {len(replay_buffer_sample)}')
+
+        if not self.silent:
+            print(f'Replay Buffer sample size: {len(replay_buffer_sample)}')
 
         states = [transition.s for transition in replay_buffer_sample]
         actions = [transition.a for transition in replay_buffer_sample]
@@ -240,10 +245,12 @@ class QLearningAI(TrainableAI):
         log_prob_turn_total = torch.zeros(1)
         log_prob_turn_total.requires_grad = True
 
-        print(f'Units to create_paths for ({len(self.player.units)}): {self.player.units}')
+        if not self.silent:
+            print(f'Units to create_paths for ({len(self.player.units)}): {self.player.units}')
         for i, unit in reversed(list(enumerate(player.units))):
 
-            print(f'Creating paths for <{unit}>. hp={unit.hp}, mp={unit.mp}')
+            if not self.silent:
+                print(f'Creating paths for <{unit}>. hp={unit.hp}, mp={unit.mp}')
 
             new_state = None
             new_state_legal_actions = None
@@ -289,13 +296,15 @@ class QLearningAI(TrainableAI):
                 if chosen_action <= 5:
                     target_coords = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)[chosen_action]
 
-                    print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {target_coords}.'
+                    if not self.silent:
+                        print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {target_coords}.'
                         f' (1/{len(legal_actions)} legal actions)')
                 
                     reward = unit.move_one_cell(self.game, *target_coords)
                 else:
                     # just stay where we are x2
-                    print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'
+                    if not self.silent:
+                        print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'
                           f' (1/{len(legal_actions)} legal actions)')
                     unit.path = []
 
@@ -365,5 +374,6 @@ class QLearningAI(TrainableAI):
                 actions_taken_count += 1
 
 
-            print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
+            if not self.silent:
+                print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
             # print()

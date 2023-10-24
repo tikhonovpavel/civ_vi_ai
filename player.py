@@ -8,7 +8,7 @@ from unit import Unit
 
 class Player:
 
-    def __init__(self, nation):
+    def __init__(self, nation, silent=False):
 
         self.nation = nation
         self.units = []
@@ -25,6 +25,8 @@ class Player:
         self._reward = 0
 
         self._reward_cum = 0
+
+        self.silent = silent
 
     @property
     def is_ai(self):
@@ -83,10 +85,12 @@ class Player:
         if game_object in self.units:
             game.map.remove(game_object.r, game_object.c, game_object)
             self.units.remove(game_object)
-            print(f'unit {game_object} has been destroyed (allegedly)')
+            
+            if not self.silent:
+                print(f'unit {game_object} has been destroyed (allegedly)')
 
-            if game_object.name == 'Shockwave Spitter':
-                print()
+            # if game_object.name == 'Shockwave Spitter':
+            #     print()
 
             if not isinstance(self.ai, QLearningAI):
                 return
