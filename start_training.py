@@ -1,27 +1,28 @@
 import json
+import os
+from tqdm import tqdm
 
 from line_profiler_pycharm import profile
+
+# import matplotlib
 from matplotlib import pyplot as plt
-from tqdm import tqdm
+# matplotlib.use('TkAgg')
 
 from game import Game
 from rl_training import QLearningAI
-
 from rewards_values import Rewards
 
 @profile
 def start_training():
-    n_games = 10
+    n_games = 100
     episode_max_length = 10
 
     rewards = []
-    rewards_lengths = []
-
     with open('init_states/training_configs/1vs1_easy.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
 
     models = None
-    for i in tqdm(range(n_games)):
+    for i in tqdm(range(1, n_games)):
         game = Game(config, None, None, sound_on=False,
                     autoplay=True, autoplay_max_turns=episode_max_length)
         models = game.players[0].ai.init_models(models, i)
@@ -40,6 +41,10 @@ def start_training():
             game.logger.start_turn(current_player.nation)
 
             current_player.create_paths()
+
+            if game.turn_number > 10:
+                handle_game_end(rl_player, is_victory=False)
+                break
 
             if game.check_winning_conditions(current_player, no_units_eq_lose=True):
                 handle_game_end(rl_player, isinstance(current_player.ai, QLearningAI))
@@ -77,15 +82,16 @@ def start_training():
         # rl_player = next(p for p in game.players if isinstance(p.ai, QLearningAI))
         # print(f'Reward of the game {i + 1}/{n_games} is: {rl_player.reward_cum}')
 
+        game_reward = rl_player.ai.replay_buffer.total_reward()
+        print(f'At the end of the game {i}, the rewards: {game_reward}')
+        rewards.append(game_reward)
+        
         rl_player.ai.update_models()
 
-        # rewards.append(rl_player.reward_cum)
-        # rewards_lengths.append(len(rl_player.ai._rewards_history))
-
+    plt.figure(figsize=(10, 10))
     plt.plot(rewards, label='rewards')
-    # plt.plot(rewards_lengths, label='rewards length')
     plt.legend()
-    plt.show()
+    plt.savefig('rewards.png')
 
 def handle_game_end(rl_player, is_victory):
     reward_value = Rewards.get_named_reward(Rewards.VICTORY) if is_victory else Rewards.get_named_reward(Rewards.DEFEAT)
@@ -99,5 +105,12 @@ def handle_game_end(rl_player, is_victory):
             additional_reward=reward_value,
             new_state_legal_action=None,)
         
+    print(f'Replay buffer final state:')
+    print(rl_player.ai.replay_buffer)
+
+def cls():
+    os.system('cls' if os.name=='nt' else 'clear')
+
 if __name__ == '__main__':
+    cls()
     start_training()

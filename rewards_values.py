@@ -4,13 +4,14 @@ from enum import Enum
 class Rewards(Enum):
     
     
-    ENEMY_UNIT_DESTROYED = 150
+    ENEMY_UNIT_DESTROYED = 200
     OWN_UNIT_DESTROYED = -150
     
     ENEMY_CITY_CAPTURED = 500
     OWN_CITY_CAPTURED_BY_ENEMY = -500
 
     SURVIVED_THE_TURN = 0
+    STAYING_WHERE_HE_IS = 0
     
     VICTORY = 1000
     DEFEAT = -1000

@@ -1,7 +1,4 @@
-import math
 import random
-from dataclasses import dataclass
-from typing import Dict, List
 
 import torch
 import numpy as np
@@ -10,8 +7,7 @@ from line_profiler_pycharm import profile
 import torch.optim as optim
 import torch.nn as nn
 
-from tabulate import tabulate
-
+from replay_buffer import ReplayBuffer, Transition
 from rewards_values import Rewards
 from ai import TrainableAI
 
@@ -28,7 +24,6 @@ from unit import Unit
 
 random.seed(42)
 torch.manual_seed(42)
-
 
 
 class ResidualLayer(torch.nn.Module):
@@ -57,143 +52,6 @@ class PolarCoordinatesLayer(torch.nn.Module):
         phi = torch.sigmoid(phi) * 2 * np.pi  # to range [0, 2*pi]
         rho = torch.exp(rho)
         return torch.cat((rho, phi), dim=1)
-
-
-@dataclass
-class Transition:
-    game_number: int
-    turn_number: int
-    movement_number: int  # number of the move of the given unit inside one turn
-    unit: Unit
-    s: torch.Tensor
-    a: int
-    r: List[Dict[str, int]]  # List of dictionaries to store reasons for rewards
-    s_next: torch.Tensor | None
-    legal_actions_s_next: List[int] | None
-
-    @property
-    def total_reward(self):
-        return sum([event[list(event.keys())[0]] for event in self.r])
-
-
-class ReplayBuffer:
-    def __init__(self, capacity: int):
-        self.capacity = capacity
-        self.buffer = []
-
-    def filter(self, unit_name):
-        return [rb for rb in self.buffer if rb.unit.name == unit_name]
-
-    def add(self, transition: Transition):
-
-        if any(r.get('OWN_UNIT_DESTROYED', None) is not None for r in transition.r) and transition.unit.name == 'Shockwave Spitter':
-            print()
-
-        if transition.unit.name == 'Shell Shock' and transition.turn_number == 3:
-            print('hoba')
-
-        if len(self.buffer) > 30:
-            print()
-        if len(self.buffer) >= self.capacity:
-            self.buffer.pop(0)
-        self.buffer.append(transition)
-
-        print(f'\nfrom ReplayBuffer.add(transition.unit=<{transition.unit}>, transition.r={transition.r})')
-        print(self)
-
-    def sample(self, batch_size: int):
-        return random.sample(self.buffer, batch_size)
-
-    def update_new_state_and_reward(self, turn_number, unit, new_state, new_state_legal_action, additional_reward: Dict[str, int]):
-        """
-        Updates the state and reward for the specified unit and turn.
-
-        Parameters:
-        - turn_number (int): The turn number for which the information needs to be updated.
-        - unit (Unit): The unit for which the information needs to be updated.
-        - new_state (Tensor): The new state to set.
-        - additional_reward (Dict[str, int]): Dictionary containing the reason and the amount of the additional reward.
-
-        Raises an exception if:
-        - No corresponding transition for update is found.
-        - More than one candidate for update is found.
-        """
-
-        if not isinstance(additional_reward, dict):
-            raise Exception()
-
-        if additional_reward.get('OWN_UNIT_DESTROYED', None) is not None and unit.name == 'Shockwave Spitter':
-            print()
-
-        candidates_count = 0
-        updated = False
-        for transition in reversed(self.buffer):
-            if transition.turn_number == turn_number and transition.unit == unit and transition.s_next is None:
-                print(f'candidate for <{unit}> is: <{transition.unit}>')
-                candidates_count += 1
-
-                if candidates_count > 1:
-                    raise ValueError(f"Multiple candidates found for unit {unit} "
-                                     f"on turn {turn_number} with s_next as None.")
-
-                assert transition.s_next is None and transition.legal_actions_s_next is None
-
-                transition.s_next = new_state
-                transition.legal_actions_s_next = new_state_legal_action
-                transition.r.append(additional_reward)  # Add the additional reward to the list
-                updated = True
-                break
-
-        if not updated:
-            raise ValueError(f"No transition found for unit {unit} "
-                             f"on turn {turn_number} with s_next as None.")
-
-        print(f'\nfrom ReplayBuffer.update_new_state_and_reward(unit=<{unit}>, additional_reward={additional_reward})')
-        print(self)
-
-    def get_unfinished_transitions(self):
-        """
-        Returns transitions for which the reward has not been determined yet.
-        Raises an exception if these transitions are not from the last game or the last turn.
-        """
-        # Проверяем, что буфер не пуст
-        if not self.buffer:
-            raise Exception('Called on the empty buffer')
-
-        # Получаем номер последней игры и последний ход из последнего перехода в буфере
-        last_game_number = self.buffer[-1].game_number
-        last_turn_number = self.buffer[-1].turn_number
-
-        unfinished_transitions = []
-
-        for transition in reversed(self.buffer):
-            # Если награда для перехода не определена, добавляем его в список
-            if transition.r is None:
-                unfinished_transitions.append(transition)
-
-                # Если этот переход не относится к последнему ходу или последней игре, выбрасываем исключение
-                if transition.game_number != last_game_number or transition.turn_number != last_turn_number:
-                    raise ValueError(f"Unfinished transition found for game {transition.game_number} "
-                                     f"and turn {transition.turn_number}, which is not the last game or turn.")
-
-        return unfinished_transitions
-
-    def __str__(self):
-        headers = ["Game", "Turn", "Move", "Unit", "Action", "Reward"]
-        table_data = []
-
-        for transition in self.buffer:
-            row = [
-                transition.game_number,
-                transition.turn_number,
-                transition.movement_number,
-                str(transition.unit),
-                transition.a,
-                transition.r
-            ]
-            table_data.append(row)
-
-        return tabulate(table_data, headers=headers)
 
 
 class QLearningAI(TrainableAI):
@@ -261,9 +119,7 @@ class QLearningAI(TrainableAI):
         return self.online_model, self.reference_model
 
     def update_models(self):
-        sample_size = min(max(len(self.replay_buffer.buffer) // 10,
-                              50),
-                          len(self.replay_buffer.buffer))
+        sample_size = min(max(len(self.replay_buffer.buffer) // 10, 50), len(self.replay_buffer.buffer))
         replay_buffer_sample = self.replay_buffer.sample(sample_size)
         print(f'Replay Buffer sample size: {len(replay_buffer_sample)}')
 
@@ -271,26 +127,33 @@ class QLearningAI(TrainableAI):
         actions = [transition.a for transition in replay_buffer_sample]
         rewards = [transition.total_reward for transition in replay_buffer_sample]
         next_states = [transition.s_next for transition in replay_buffer_sample]
-
-        # Извлекаем legal_actions для следующего состояния из replay_buffer_sample
         legal_actions_s_next = [transition.legal_actions_s_next for transition in replay_buffer_sample]
 
         state_tensor_batch = torch.stack(states).to(self.device)
         action_tensor_batch = torch.tensor(actions, dtype=torch.long).to(self.device)
         reward_tensor_batch = torch.tensor(rewards, dtype=torch.float32).to(self.device)
-        next_state_tensor_batch = torch.stack([s for s in next_states if s is not None]).to(self.device)
+
+        # Изначально все next_state_values установим в 0
+        next_state_values = torch.zeros(len(replay_buffer_sample), dtype=torch.float32).to(self.device)
+
+        # Найдем индексы не-None состояний и сохраним их
+        non_terminal_indices = [i for i, state in enumerate(next_states) if state is not None]
+
+        # Теперь создадим тензор только из не-None состояний
+        non_terminal_next_states = [next_states[i] for i in non_terminal_indices]
+        non_terminal_next_state_tensor_batch = torch.stack(non_terminal_next_states).to(self.device)
+
+        # Вычисляем Q-значения для всех не-None следующих состояний
+        non_terminal_next_state_values = self.reference_model(non_terminal_next_state_tensor_batch.squeeze())
+
+        for idx, values in enumerate(non_terminal_next_state_values):
+            legal_values = values[legal_actions_s_next[non_terminal_indices[idx]]]
+            next_state_values[non_terminal_indices[idx]] = legal_values.max().item()
+
+        reference_pred = reward_tensor_batch + self.gamma * next_state_values
 
         # Для Q-сети нам нужно предсказать Q-значение для совершенного действия
         model_pred = self.online_model(state_tensor_batch.squeeze()).gather(1, action_tensor_batch.unsqueeze(-1)).squeeze(-1)
-
-        # Для следующего состояния мы выбираем максимальное Q-значение только среди допустимых действий
-        all_next_state_values = self.reference_model(next_state_tensor_batch.squeeze())
-        next_state_values = []
-        for idx, values in enumerate(all_next_state_values):
-            legal_values = values[legal_actions_s_next[idx]]
-            next_state_values.append(legal_values.max().item())
-        next_state_values = torch.tensor(next_state_values, dtype=torch.float32).detach().to(self.device)
-        reference_pred = reward_tensor_batch + self.gamma * next_state_values
 
         loss = 1. / len(replay_buffer_sample) * ((reference_pred - model_pred) ** 2).sum()
 
@@ -303,10 +166,15 @@ class QLearningAI(TrainableAI):
             self.reference_model.load_state_dict(self.online_model.state_dict())
 
     def get_legal_actions(self, unit):
+        """
+        Legal actions are: 
+            * 1st-6th - are nearest neighbours
+            * 7th - a cell, where unit already are
+        """
         nearest_neighbours = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)
 
         return [i for i, cell in enumerate(nearest_neighbours)
-                if self.check_if_legal(unit, cell, nearest_neighbours)]
+                if self.check_if_legal(unit, cell, nearest_neighbours)]  + [6]  # staying where you are is always legal
 
     def select_action(self, state, legal_actions, epsilon=0.1):
         # Прогоняем состояние через Q-сеть
@@ -366,11 +234,13 @@ class QLearningAI(TrainableAI):
         log_prob_turn_total.requires_grad = True
 
         print(f'Units to create_paths for ({len(self.player.units)}): {self.player.units}')
-        for i, unit in enumerate(player.units):
+        for i, unit in reversed(list(enumerate(player.units))):
+
+            print(f'Creating paths for <{unit}>. hp={unit.hp}, mp={unit.mp}')
 
             new_state = None
             new_state_legal_actions = None
-            actions_taken_count = 0
+            actions_taken_count = 1
 
             while True:
                 if new_state is None:
@@ -402,40 +272,51 @@ class QLearningAI(TrainableAI):
                     legal_actions = new_state_legal_actions
 
                 # if len(legal_actions) == 0:
-                #     # just stay where we are
-                #     unit.path = []
-                #     break
+                #     # Если так получилось, то это самое первое действие юнита на этом ходу, а ему уже некуда идти
+                #     # значит е
 
                 chosen_action = self.select_action(state, legal_actions)
                 # chosen_action_old = chosen_action
                 # chosen_action = legal_cells[chosen_action]
 
-                if chosen_action < 6:
+                if chosen_action <= 5:
                     target_coords = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)[chosen_action]
 
-                    # if target_coords == unit_init_coords:
-                    #     player.add_reward(Rewards.get_named_reward(Rewards.RETURNED_TO_THE_INIT_POSITION))
+                    print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {target_coords}.'
+                        f' (1/{len(legal_actions)} legal actions)')
+                
+                    reward = unit.move_one_cell(self.game, *target_coords)
                 else:
                     # just stay where we are x2
-                    print(f'{actions_taken_count + 1}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'
-                          # f' prob was {legal_action_probabilities[chosen_action_old].item()}'
-                          f' (1/{len(legal_actions)} actions)')
+                    print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'
+                          f' (1/{len(legal_actions)} legal actions)')
                     unit.path = []
+
+                    target_coords = unit.coords
+
+                    reward = [Rewards.get_named_reward(Rewards.STAYING_WHERE_HE_IS)]
+
+                    # ну что ж, выбор оставаться на месте - окончательный. 
+                    # Даже если у юнита остались ОП, мы на это забиваем, и переходим к следующему юниту
+                    player.ai.replay_buffer.add(Transition(game_number=self.game_n,
+                                                           turn_number=self.game.turn_number,
+                                                           movement_number=actions_taken_count,
+                                                           unit=unit,
+                                                           s=state,
+                                                           a=chosen_action,
+                                                           r=reward,
+                                                           s_next=None,
+                                                           legal_actions_s_next=None))
                     break
 
-                print(f'{actions_taken_count + 1}) {unit.name} {unit.coords} -> {target_coords}.'
-                      # f' prob was {legal_action_probabilities[chosen_action_old].item()}'
-                      f' (1/{len(legal_actions)} actions)')
-                reward = unit.move_one_cell(self.game, *target_coords)
-                self.game.update()
-                actions_taken_count += 1
+                # self.game.update()
 
                 if unit.mp != 0 and unit.hp:  # then just continue to move this unit
                     new_state = self.create_input_tensor(unit).to(self.device)
                     new_state_legal_actions = self.get_legal_actions(unit)
 
                     if len(new_state_legal_actions) == 0:
-                        # юнит дурак и забрёл непойми куда. Больше он не может ходить на этом тёрне, хотя и остались очки перемещения
+                        # юнит дурак и забрёл не пойми куда. Больше он не может ходить на этом тёрне, хотя и остались очки перемещения
                         # поэтому нам надо оставлять его с None стейтом
                         player.ai.replay_buffer.add(Transition(game_number=self.game_n,
                                                                turn_number=self.game.turn_number,
@@ -474,227 +355,8 @@ class QLearningAI(TrainableAI):
 
                     break
 
+                actions_taken_count += 1
+
+
             print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
             # print()
-
-
-# class PolicyGradientAI(TrainableAI):
-#     def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, device='cpu', policy_network=None):
-#         super(PolicyGradientAI, self).__init__(game, player)
-#         self.max_distance_from_enemy = max_distance_from_enemy
-#
-#         self.device = device
-#
-#         self.std_rho = 1.0  # Tune this value based on your game
-#         self.std_phi = 0.1  # Tune this value based on your game
-#
-#         self.policy_network = None
-#         self.lr = lr
-#
-#         # self.mu_rho, self.log_sigma_rho, self.mu_phi, self.log_sigma_phi = \
-#         #     torch.chunk(self.policy_network[-1].output, 4, dim=1)
-#
-#         # self.policy_network[-1].register_forward_hook(self.polar_coordinate_activations)
-#
-#         # self.policy_network = torch.nn.Sequential(
-#         #     torch.nn.Conv2d(14, 24, kernel_size=3, stride=1, padding=1),
-#         #     torch.nn.ReLU(),
-#         #     torch.nn.Conv2d(24, 24, kernel_size=3, stride=1, padding=1),
-#         #     torch.nn.ReLU(),
-#         #     torch.nn.Flatten(),
-#         #     torch.nn.Linear(24 * game.map.n_rows * game.map.n_columns, game.map.n_rows * game.map.n_columns),
-#         #     torch.nn.Softmax(dim=-1)
-#         # )
-#         # self.states = []
-#         # self.actions = []
-#         self.rewards = []
-#         self._rewards_history = []
-#         self.saved_log_probs = []
-#
-#     def init_policy_network(self, policy_network=None):
-#         if policy_network is None:
-#             self.policy_network = torch.nn.Sequential(
-#                 torch.nn.Conv2d(17, 24, kernel_size=3, stride=1, padding=1),
-#                 torch.nn.ReLU(),
-#                 ResidualLayer(24),
-#                 ResidualLayer(24),
-#                 torch.nn.Flatten(),
-#                 torch.nn.Linear(24 * self.game.map.n_rows * self.game.map.n_columns, 19),
-#                 # torch.nn.Softmax(dim=-1),
-#                 # PolarCoordinatesLayer()
-#             )
-#         else:
-#             self.policy_network = policy_network
-#
-#         self.policy_network.to(self.device)
-#         self.optimizer = optim.Adam(self.policy_network.parameters(), lr=self.lr)
-#
-#         return policy_network
-#
-#
-#     @staticmethod
-#     def polar_coordinate_activations(_, __, output):
-#         rho, phi = output.chunk(2, dim=-1)
-#         rho = torch.nn.functional.relu(rho)
-#         phi = (torch.tanh(phi) + 1) * np.pi
-#         return torch.cat([rho, phi], dim=-1)
-#
-#     def get_target_rc_from_action(self, action, unit):
-#         r = action // self.game.map.n_rows
-#         c = action % self.game.map.n_columns
-#
-#         return r, c
-#
-#     def polar_to_cartesian(self, rho, phi):
-#         x = rho * torch.cos(phi).item()
-#         y = rho * torch.sin(phi).item()
-#
-#         return x, y
-#
-#     @profile
-#     def check_if_legal(self, unit, cell, nearest_neighbours):
-#         player = self.player
-#
-#         if cell is None:
-#             return False
-#
-#         is_enemy_on_hex = len(self.game.get_game_objects_on_hex(*cell, only_enemies=True)) > 0
-#         cell_obj = self.game.map.get(*cell)
-#         cost = cell_obj.geometry.terrain.cost
-#
-#         if cell not in nearest_neighbours:
-#             if unit.role == MilitaryObject.COMBAT:
-#                 return False
-#             elif unit.role == MilitaryObject.RANGED:
-#                 return is_enemy_on_hex and cost <= unit.mp_base and unit.can_attack
-#             else:
-#                 raise NotImplementedError()
-#
-#         if cost > unit.mp:
-#             if unit.role == MilitaryObject.COMBAT:
-#                 return False
-#
-#             # ranged can go, only if there is an enemy on the cell and we can attack
-#             return is_enemy_on_hex and unit.can_attack
-#
-#         # if we are here, then cell is in nearest neighbours and cost < mp
-#
-#         if unit.role == MilitaryObject.COMBAT and is_enemy_on_hex:
-#             return unit.can_attack
-#
-#         # false only if unit on the cell is of the same nation as the player
-#         return len(cell_obj.game_objects) == 0 or cell_obj.game_objects[0].player.nation != player.nation
-#
-#
-#         # if is_enemy_on_hex:
-#         #     if unit.category == MilitaryObject.COMBAT and not unit.can_attack:
-#         #         return False
-#         #     elif unit.category == MilitaryObject.RANGED:
-#         #         return True
-#         # else:
-#         #     if cell.geometry.terrain.cost > unit.mp:
-#         #         return False
-#
-#
-#
-#     # def get_actions_list(self, r, c):
-#     #     nearest_neighbours = self.game.map.get_neighbours_grid_coords(r, c)
-#     #
-#     #     result = nearest_neighbours.copy()
-#     #
-#     #     for n_neighbour in nearest_neighbours:
-#     #         far_neighbours = self.game.map.get_neighbours_grid_coords(*n_neighbour)
-#     #
-#     #         for f_neighbour in far_neighbours:
-#     #             if f_neighbour not in result:
-#     #                 result.append(f_neighbour)
-#     #
-#     #     return result
-#
-#     @profile
-#     def create_paths(self):
-#         player = self.player
-#
-#         if len(self.rewards) != len(self.saved_log_probs):
-#             raise Exception('You should call receive_reward after create_paths at each turn')
-#
-#         log_prob_turn_total = torch.zeros(1)
-#         log_prob_turn_total.requires_grad = True
-#
-#         try:
-#             input_tensor = self.create_input_tensor().to(self.device)
-#         except RuntimeError as err:
-#             if 'stack expects a non-empty TensorList' not in err.args:
-#                 raise err
-#
-#             self.saved_log_probs.append(log_prob_turn_total)
-#             return
-#
-#         for i, unit in enumerate(player.units):
-#             unit_init_coords = unit.r, unit.c
-#
-#             count = 0
-#             # if unit.name == 'Shell Shock':
-#             #     return
-#                 # print(unit.name)
-#
-#             while unit.mp != 0 and unit.hp > 0:
-#                 action_logits = self.policy_network(input_tensor[i].unsqueeze(0))
-#                 # try:
-#                 #     action_logits = self.policy_network(input_tensor[i].unsqueeze(0))
-#                 # except Exception as err:
-#                 #     self.create_input_tensor().to(self.device)
-#                 #     raise err
-#
-#                 all_neighbour_cells = self.game.map.get_neighbours_grid_coords(unit.r, unit.c, radius=2)
-#                 nearest_neighbours = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)
-#
-#                 legal_cells = [i for i, cell in enumerate(all_neighbour_cells)
-#                                if self.check_if_legal(unit, cell, nearest_neighbours)]
-#
-#                 if len(legal_cells) == 0:
-#                     # just stay where we are
-#                     unit.path = []
-#                     break
-#
-#                 # Get the logits corresponding to legal cells
-#                 legal_action_logits = action_logits[0, legal_cells]
-#
-#                 # Calculate the softmax values of these logits
-#                 legal_action_probabilities = torch.nn.functional.softmax(legal_action_logits, dim=0)
-#
-#                 # Now, we can sample directly from the legal_action_probabilities
-#                 action_distribution = torch.distributions.Categorical(legal_action_probabilities)
-#                 chosen_action = action_distribution.sample().item()
-#
-#                 log_prob_turn_total = log_prob_turn_total + torch.log(legal_action_probabilities[chosen_action])
-#
-#                 # Since chosen_action is an index of legal_action_probabilities,
-#                 # we need to map it back to the corresponding action
-#                 chosen_action_old = chosen_action
-#                 chosen_action = legal_cells[chosen_action]
-#
-#                 if chosen_action < 6:
-#                     target_coords = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)[chosen_action]
-#
-#                     if target_coords == unit_init_coords:
-#                         player.add_reward(Rewards.get_named_reward(Rewards.RETURNED_TO_THE_INIT_POSITION))
-#                 else:
-#                     # just stay where we are x2
-#                     print(f'{count + 1}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'
-#                           f' prob was {legal_action_probabilities[chosen_action_old].item()}'
-#                           f' (1/{len(legal_cells)} actions)')
-#                     unit.path = []
-#                     break
-#
-#                 print(f'{count + 1}) {unit.name} {unit.coords} -> {target_coords}.'
-#                       f' prob was {legal_action_probabilities[chosen_action_old].item()}'
-#                       f' (1/{len(legal_cells)} actions)')
-#                 unit.move_one_cell(self.game, *target_coords)
-#                 self.game.update()
-#                 count += 1
-#
-#             print(f'{i+1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {count} steps')
-#
-#
-#         self.saved_log_probs.append(log_prob_turn_total)
