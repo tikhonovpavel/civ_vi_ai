@@ -4,9 +4,7 @@ from tqdm import tqdm
 
 from line_profiler_pycharm import profile
 
-# import matplotlib
 from matplotlib import pyplot as plt
-# matplotlib.use('TkAgg')
 
 from game import Game
 from rl_training import QLearningAI
@@ -21,11 +19,11 @@ def start_training():
     with open('init_states/training_configs/1vs1_easy.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
 
-    models = None
+    models, replay_buffer = None, None
     for i in tqdm(range(1, n_games)):
         game = Game(config, None, None, sound_on=False,
                     autoplay=True, autoplay_max_turns=episode_max_length)
-        models = game.players[0].ai.init_models(models, i)
+        models, replay_buffer = game.players[0].ai.init(i, *(models, replay_buffer))
 
         rl_player = game.players[0]
 
@@ -74,15 +72,10 @@ def start_training():
             game.update()
 
             game.subturn_number += 1
-            # print(f'SUBturn number switched from {game.subturn_number - 1} to {game.subturn_number}')
             if game.subturn_number % len(game.players) == 0:
                 game.turn_number += 1
-                # print(f'Turn number switched from {game.turn_number - 1} to {game.turn_number}')
 
-        # rl_player = next(p for p in game.players if isinstance(p.ai, QLearningAI))
-        # print(f'Reward of the game {i + 1}/{n_games} is: {rl_player.reward_cum}')
-
-        game_reward = rl_player.ai.replay_buffer.total_reward()
+        game_reward = rl_player.ai.replay_buffer.get_last_game_total_reward()
         print(f'At the end of the game {i}, the rewards: {game_reward}')
         rewards.append(game_reward)
         

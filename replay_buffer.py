@@ -99,8 +99,9 @@ class ReplayBuffer:
         if not updated:
             raise ValueError(f"No transition found for unit {unit} on turn {turn_number} with s_next as None.")
         
-    def total_reward(self):
-        return sum(transition.total_reward for transition in self.buffer)
+    def get_last_game_total_reward(self):
+        last_game_number = self.buffer[-1].game_number
+        return sum(transition.total_reward for transition in self.buffer if transition.game_number == last_game_number)
 
 
     def get_unfinished_transitions(self):
@@ -148,4 +149,3 @@ class ReplayBuffer:
             table_data.append(row)
 
         return tabulate(table_data, headers=headers)
-

@@ -92,17 +92,24 @@ class QLearningAI(TrainableAI):
             nn.ReLU(),
             nn.Linear(256, 7)
         )
+        self.__replay_buffer_lambda = lambda: ReplayBuffer(capacity=500)
 
-        self.replay_buffer = ReplayBuffer(capacity=500)
+        self.replay_buffer = None
 
-    def init_models(self, models, game_n):
+    def init(self, game_n, *init_objects):
+        models, replay_buffer = init_objects
+
         if models is None:
+            assert replay_buffer is None
+
             self.online_model = self.__model_lambda()
             self.reference_model = self.__model_lambda()
-
             self.reference_model.load_state_dict(self.online_model.state_dict())
+
+            self.replay_buffer = self.__replay_buffer_lambda()
         else:
             self.online_model, self.reference_model = models
+            self.replay_buffer = replay_buffer
             # self.reference_model = self.__model_lambda()
             #
             # self.reference_model.load_state_dict(self.online_model.state_dict())
@@ -116,7 +123,7 @@ class QLearningAI(TrainableAI):
 
         self.game_n = game_n
 
-        return self.online_model, self.reference_model
+        return (self.online_model, self.reference_model), self.replay_buffer
 
     def update_models(self):
         sample_size = min(max(len(self.replay_buffer.buffer) // 10, 50), len(self.replay_buffer.buffer))
@@ -309,7 +316,7 @@ class QLearningAI(TrainableAI):
                                                            legal_actions_s_next=None))
                     break
 
-                # self.game.update()
+                self.game.update()
 
                 if unit.mp != 0 and unit.hp:  # then just continue to move this unit
                     new_state = self.create_input_tensor(unit).to(self.device)
