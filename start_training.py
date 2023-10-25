@@ -54,14 +54,15 @@ class TrainingSession:
                 current_player = game.get_current_player()
 
                 if not self.silent:
-                    print(f'\n\n== [Game {i + 1}] {current_player.nation} started the turn {game.turn_number} '
+                    print(f'\n\n== [Game {i}] {current_player.nation} started the turn {game.turn_number} '
                         f'with {len(current_player.units)} units and {len(current_player.cities)} cities: ==')
 
                 game.logger.start_turn(current_player.nation)
 
-                current_player.create_paths()
+                # The most important line:
+                current_player.create_paths()  
 
-                if game.turn_number > 10:
+                if game.turn_number > 20:
                     self.handle_game_end(rl_player, is_victory=False)
                     break
 
@@ -70,7 +71,11 @@ class TrainingSession:
                     break
 
                 for obj in current_player.game_objects:
-                    obj.move(game)
+                    if current_player.nation == 'Rome':
+                        print('hoba')
+
+                    res = obj.move(game, calc_rewards_for=[rl_player])#[0]
+                    print(f'res of the move: {res}')
                     obj.gain_hps()
 
                     obj.mp = obj.mp_base
@@ -99,7 +104,7 @@ class TrainingSession:
             game_reward = rl_player.ai.replay_buffer.get_last_game_total_reward()
             print(f'At the end of the game {i}, the rewards: {game_reward}')
             self.rewards.append(game_reward)
-            
+
             rl_player.ai.update_models()
 
         self.plot_rewards()

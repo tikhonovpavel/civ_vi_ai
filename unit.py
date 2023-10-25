@@ -15,7 +15,7 @@ random.seed(42)
 
 from consts import DEFAULT_UNIT_IMAGE_SIZE, UI_UNIT_IMAGE_SIZE
 
-from typing import Tuple, List
+from typing import Dict, Tuple, List
 
 
 class UnitState:
@@ -91,8 +91,8 @@ class Unit(MilitaryObject):
 
         # self.silent = silent
 
-    def combat_attack(self, game, enemy_r, enemy_c) -> tuple[int, int, int, int]:
-        own_reward, enemy_reward = [], []
+    def combat_attack(self, game, enemy_r, enemy_c, calc_rewards_for) -> tuple[int, int, int, int]:
+        rewards_dict = {player: [] for player in calc_rewards_for}
 
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
 
@@ -122,33 +122,47 @@ class Unit(MilitaryObject):
         if enemy_obj.hp - enemy_unit_damage <= 0:
 
             if isinstance(enemy_obj, City):
+        
+                for p in calc_rewards_for:
+                    if p == self.player:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, unit_damage))
+                    else:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, unit_damage))
+
                 # for each unit, which happen to be at the city cell
                 for u in game.map.get(enemy_obj.r, enemy_obj.c).game_objects:
                     if isinstance(u, Unit):
                         enemy_obj.player.destroy(game, u, on_defense=True)
 
-                        # self.player.add_reward(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
-                        own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
-
-                        # enemy_obj.player.add_reward(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
-                        enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+                        for p in calc_rewards_for:
+                            if p == self.player:
+                                rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                            else:
+                                rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
 
                 enemy_obj.change_ownership(self.player)
 
-                # self.player.add_reward(Rewards.get_named_reward(Rewards.ENEMY_CITY_CAPTURED))
-                own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_CITY_CAPTURED))
-
-                # enemy_obj.player.add_reward(Rewards.get_named_reward(Rewards.OWN_CITY_CAPTURED_BY_ENEMY))
-                enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_CITY_CAPTURED_BY_ENEMY))
+                for p in calc_rewards_for:
+                    if p == self.player:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_CITY_CAPTURED))
+                    else:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_CITY_CAPTURED_BY_ENEMY))
 
             elif isinstance(enemy_obj, Unit):
                 enemy_obj.player.destroy(game, enemy_obj, on_defense=True)  # del enemy_unit
 
-                # self.player.add_reward(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
-                own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                for p in calc_rewards_for:
+                    if p == self.player:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, unit_damage))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
 
-                # enemy_obj.player.add_reward(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
-                enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                    else:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, unit_damage))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
+                        
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+
             else:
                 raise NotImplementedError()
 
@@ -165,18 +179,25 @@ class Unit(MilitaryObject):
             self.player.destroy(game, self, on_defense=False)
             enemy_obj.hp = max(1, enemy_obj.hp - enemy_unit_damage)
 
-            # self.player.add_reward(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
-            own_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+            for p in calc_rewards_for:
+                if p == self.player:
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+                else:
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
 
         else:
             self.hp -= unit_damage
             enemy_obj.hp -= enemy_unit_damage
 
-            own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
-            own_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, unit_damage))
-
-            enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
-            enemy_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, unit_damage))
+            for p in calc_rewards_for:
+                if p == self.player:
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, unit_damage))
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
+                else:
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, unit_damage))
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
 
             # -1 to MP because of the attack
             self.mp -= 1  # self.selected = False
@@ -186,20 +207,19 @@ class Unit(MilitaryObject):
 
         enemy_obj.path = []
 
-        return unit_damage, enemy_unit_damage, own_reward, enemy_reward
+        return unit_damage, enemy_unit_damage, rewards_dict
 
-    def ranged_attack(self, game, enemy_r, enemy_c):
-        own_reward = []
-        enemy_reward = []
+    def ranged_attack(self, game, enemy_r, enemy_c, calc_rewards_for):
+        rewards_dict = {player: [] for player in calc_rewards_for}
 
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
         enemy_unit_damage = MilitaryObject.compute_ranged_damage(self, enemy_obj)
 
         if not self.silent:
             print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
-                  f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
-                  f"HP: ({self.hp} -> {max(0, self.hp)}) / "
-                  f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_unit_damage)})")
+                f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
+                f"HP: ({self.hp} -> {max(0, self.hp)}) / "
+                f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_unit_damage)})")
 
         if game.sound_marker.state and self.sound_attack:
             self.sound_attack.play(maxtime=1500, fade_ms=500)
@@ -211,26 +231,30 @@ class Unit(MilitaryObject):
                 enemy_obj.player.destroy(game, enemy_obj, on_defense=True)
                 game.map.reset(enemy_obj.r, enemy_obj.c)
 
-                # self.player.add_reward(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
-                own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
-
-                # enemy_obj.player.add_reward(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
-                enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
-
-                # game.map.set(enemy_unit.r, enemy_unit.c, [])
+                for p in calc_rewards_for:
+                    if p == self.player:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                    else:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
             else:
                 enemy_obj.hp = 0
         else:
             enemy_obj.hp -= enemy_unit_damage
             
-            own_reward.append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
-            enemy_reward.append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
+            for p in calc_rewards_for:
+                if p == self.player:
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_unit_damage))
+                else:
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_unit_damage))
 
         self.mp = 0
         self.path = []
         self.can_attack = False
 
-        return enemy_unit_damage, own_reward, enemy_reward
+        return enemy_unit_damage, rewards_dict
+        # return enemy_unit_damage, own_reward, enemy_reward
 
     def gain_hps(self):
         if self.mp == self.mp_base:
@@ -238,7 +262,7 @@ class Unit(MilitaryObject):
                 self.hp = min(100, self.hp + 10)
 
     @profile
-    def move_one_cell(self, game, new_r, new_c) -> int:
+    def move_one_cell(self, game, new_r, new_c, calc_rewards_for) -> List[Dict]:
         if not (new_r, new_c) in game.map.get_neighbours_grid_coords(self.r, self.c):
             if self.role == MilitaryObject.COMBAT or \
                     not (self.is_within_attack_range(game, new_r, new_c)
@@ -246,28 +270,32 @@ class Unit(MilitaryObject):
                 raise Exception()
 
         self.path = [(self.r, self.c), (new_r, new_c)]
-        return self.move(game)
-
+        return self.move(game, calc_rewards_for)
+    
     @profile
-    def move(self, game) -> int:
-        own_reward, enemy_reward = [], []
+    def move(self, game, calc_rewards_for) -> List[Dict]:
+        rewards_list_dict = []
 
         # if there is just a transition without an attack - the logic is the same for any type of unit
         if len(self.path) == 0 and self.get_ranged_target(game) is None:
-            return 0
+            for _ in calc_rewards_for:
+                rewards_list_dict.append([])
+
+            return rewards_list_dict
 
         # check if ranged unit inside the attack radius
         ranged_target = self.get_ranged_target(game)
         if ranged_target is not None:
-            enemy_unit_damage, own_rew, enemy_rew = self.ranged_attack(game, ranged_target.r, ranged_target.c)
-            own_reward += own_rew
+            enemy_unit_damage, rewards_dict = self.ranged_attack(game, ranged_target.r, ranged_target.c, calc_rewards_for)
+            rewards_list_dict.append(rewards_dict)
+            
             game.logger.log_event(RangedAttackEvent(self,
                                                     target=ranged_target,
                                                     enemy_damage=enemy_unit_damage))
         else:
             avail_path_coords = self._get_available_path_coords(game)
             if len(avail_path_coords) == 0:
-                return 0
+                return rewards_list_dict
 
             coord, mp_spent, is_attack = avail_path_coords[-1]
             new_r, new_c = coord
@@ -279,9 +307,10 @@ class Unit(MilitaryObject):
                     game.logger.log_event(MoveEvent(self, path=path_log))
                     self.move_unconditionally(game, *avail_path_coords[-2][0])
 
-                unit_damage, enemy_unit_damage, own_rew, enemy_rew = self.combat_attack(game, new_r, new_c)
-                own_reward.extend(own_rew)
-                enemy_reward.extend(enemy_rew)
+                unit_damage, enemy_unit_damage, rewards_dict = self.combat_attack(game, new_r, new_c, calc_rewards_for)
+                rewards_list_dict.append(rewards_dict)
+                # own_reward.extend(own_rew)
+                # enemy_reward.extend(enemy_rew)
 
             else:
                 path_log = [(self.r, self.c)] + [coords for coords, _, _ in avail_path_coords]
@@ -293,7 +322,7 @@ class Unit(MilitaryObject):
 
                 # self.ranged_target = None
 
-        return own_reward  # , enemy_reward
+        return rewards_list_dict  # , enemy_reward
 
 
     def _get_available_path_coords(self, game) -> List[Tuple[Tuple[int, int], int, bool]]:

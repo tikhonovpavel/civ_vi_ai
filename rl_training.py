@@ -298,7 +298,7 @@ class QLearningAI(TrainableAI):
                         print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {target_coords}.'
                         f' (1/{len(legal_actions)} legal actions)')
                 
-                    reward = unit.move_one_cell(self.game, *target_coords)
+                    reward = unit.move_one_cell(self.game, *target_coords, calc_rewards_for=[self.player])
                 else:
                     # just stay where we are x2
                     if not self.silent:

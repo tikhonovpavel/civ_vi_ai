@@ -92,32 +92,32 @@ class Player:
             # if game_object.name == 'Shockwave Spitter':
             #     print()
 
-            if not isinstance(self.ai, QLearningAI):
-                return
+            # if not isinstance(self.ai, QLearningAI):
+            #     return
 
-            if on_defense:
-                self.ai.replay_buffer.update_new_state_and_reward(
-                    turn_number=game.turn_number,
-                    unit=game_object,
-                    new_state=None,
-                    new_state_legal_action=None,  # any action is illegal when you're dead
-                    additional_reward=Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+            # if on_defense:
+            #     self.ai.replay_buffer.update_new_state_and_reward(
+            #         turn_number=game.turn_number,
+            #         unit=game_object,
+            #         new_state=None,
+            #         new_state_legal_action=None,  # any action is illegal when you're dead
+            #         additional_reward=Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
 
         elif game_object in self.cities:
             self.cities.remove(game_object)
 
-            if not isinstance(self.ai, QLearningAI):
-                return
+            # if not isinstance(self.ai, QLearningAI):
+            #     return
 
             # city cannot be captured when it attacks, so the check (if on_defense) is redundant
 
-            for unit in self.units:
-                self.ai.replay_buffer.update_new_state_and_reward(
-                    turn_number=game.turn_number,
-                    unit=unit,
-                    new_state=None,
-                    new_state_legal_action=None,
-                    additional_reward=Rewards.get_named_reward(Rewards.OWN_CITY_CAPTURED_BY_ENEMY))
+            # for unit in self.units:
+            #     self.ai.replay_buffer.update_new_state_and_reward(
+            #         turn_number=game.turn_number,
+            #         unit=unit,
+            #         new_state=None,
+            #         new_state_legal_action=None,
+            #         additional_reward=Rewards.get_named_reward(Rewards.OWN_CITY_CAPTURED_BY_ENEMY))
         else:
             raise Exception()
 

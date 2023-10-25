@@ -4,6 +4,7 @@ from line_profiler_pycharm import profile
 from consts import UI_CITY_IMAGE_SIZE
 from game_object import MilitaryObject
 from logger import RangedAttackEvent
+from rewards_values import Rewards
 
 
 class City(MilitaryObject):
@@ -52,16 +53,18 @@ class City(MilitaryObject):
     def is_cell_inside(self, r, c):
         return next((True for tile in self._territory if tile == (r, c)), False)
 
-    def combat_attack(self, game, enemy_r, enemy_c):
+    def combat_attack(self, game, enemy_r, enemy_c, calc_rewards_for):
         raise NotImplementedError()
 
-    def ranged_attack(self, game, enemy_r, enemy_c):
+    def ranged_attack(self, game, enemy_r, enemy_c, calc_rewards_for):
+        rewards_dict = {player: [] for player in calc_rewards_for}
+
         enemy_obj = next(iter(game.map.get(enemy_r, enemy_c).game_objects), None)
         enemy_obj_damage = MilitaryObject.compute_ranged_damage(self, enemy_obj)
 
         if not self.silent:
             print(f"{self.player.nation}'s {self.category} {self.name} on {self.r, self.c} => "
-                  f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r,      enemy_obj.c}. "      
+                  f"{enemy_obj.player.nation}'s {enemy_obj.category} {enemy_obj.name} on {enemy_obj.r, enemy_obj.c}. "      
                   f"HP: ({self.hp} -> {max(0, self.hp)}) / "
                   f"({enemy_obj.hp} -> {max(0, enemy_obj.hp - enemy_obj_damage)})")
 
@@ -74,31 +77,47 @@ class City(MilitaryObject):
             if not isinstance(enemy_obj, City):
                 enemy_obj.player.destroy(game, enemy_obj, on_defense=True)
 
-                # game.map.reset(enemy_unit.r, enemy_unit.c)
-                # game.map.set(enemy_unit.r, enemy_unit.c, [])
+                for p in calc_rewards_for:
+                    if p == self.player:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_obj_damage))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                    else:
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_obj_damage))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
             else:
                 enemy_obj.hp = 0
         else:
             enemy_obj.hp -= enemy_obj_damage
 
+            for p in calc_rewards_for:
+                if p == self.player:
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_obj_damage))
+                else:
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_obj_damage))
+
         self.mp = 0
         self.path = []
         self.can_attack = False
 
-        return enemy_obj_damage
+        return enemy_obj_damage, rewards_dict
 
     @profile
-    def move(self, game):
+    def move(self, game, calc_rewards_for):
+        rewards_list_dict = []
+
         # check if ranged unit inside the attack radius
         ranged_target = self.get_ranged_target(game)
         if ranged_target is not None:
-            enemy_obj_damage = self.ranged_attack(game, ranged_target.r, ranged_target.c)
+            enemy_obj_damage, rewards_dict = self.ranged_attack(game, ranged_target.r, ranged_target.c, calc_rewards_for)
+            rewards_list_dict.append(rewards_dict)
 
             game.logger.log_event(RangedAttackEvent(self,
                                                     target=ranged_target,
                                                     enemy_damage=enemy_obj_damage))
 
         game.update()
+
+        return rewards_list_dict
 
     def change_ownership(self, new_player):
         self.player.cities.remove(self)
