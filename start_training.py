@@ -1,6 +1,7 @@
 import json
 import os
 import pickle
+import numpy as np
 from tqdm import tqdm
 import argparse
 from matplotlib import pyplot as plt
@@ -19,7 +20,7 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 900
 
 class TrainingSession:
-    def __init__(self, silent=False, n_games=500, episode_max_length=7):
+    def __init__(self, silent=False, n_games=500, episode_max_length=5):
         self.silent = silent
         self.n_games = n_games
         self.episode_max_length = episode_max_length
@@ -27,6 +28,11 @@ class TrainingSession:
 
     @profile
     def start_training(self):
+
+        print(f'Start the training with the following parameters:')
+        print(f'  Silent mode: {self.silent}')
+        print(f'  Number of games: {self.n_games}')
+        print(f'  Maximum episode length: {self.episode_max_length}')
 
         if not self.silent:
             pygame.init()
@@ -157,7 +163,6 @@ class TrainingSession:
         reward_value = Rewards.get_named_reward(Rewards.VICTORY) if is_victory else Rewards.get_named_reward(Rewards.DEFEAT)
         print('QLearningAI won!' if is_victory else 'QLearningAI lost')
 
-
         if is_victory:
             print()
         
@@ -167,14 +172,23 @@ class TrainingSession:
                                                                    new_state=None,
                                                                    additional_reward=reward_value,
                                                                    new_state_legal_action=None,)
-            
+
         if not self.silent:
             print(f'Replay buffer final state:')
             print(rl_player.ai.replay_buffer)
 
+    @staticmethod
+    def running_average(data, window_size):
+        window = np.ones(window_size) / window_size
+        return np.convolve(data, window, mode='valid')
+
     def plot_rewards(self, path):
         plt.figure(figsize=(10, 5))
         plt.plot(self.rewards, label='rewards')
+
+        plt.plot(self.running_average(self.rewards, 50))
+
+        
         plt.legend()
         plt.savefig(path)
 
@@ -185,7 +199,7 @@ class TrainingSession:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Start a training session.")
     parser.add_argument('--n_games', type=int, default=500, help="Number of games to play.")
-    parser.add_argument('--episode_max_length', type=int, default=7, help="Maximum length of an episode.")
+    parser.add_argument('--episode_max_length', type=int, default=5, help="Maximum length of an episode.")
     parser.add_argument('--silent', action='store_true', help="Run in silent mode without displaying the game.")
     args = parser.parse_args()
 
