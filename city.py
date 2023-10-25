@@ -79,11 +79,11 @@ class City(MilitaryObject):
 
                 for p in calc_rewards_for:
                     if p == self.player:
-                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_obj_damage))
-                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_obj_damage, to_unit=self))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DESTROYED, to_unit=self))
                     else:
-                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_obj_damage))
-                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_obj_damage, to_unit=enemy_obj))
+                        rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DESTROYED, to_unit=enemy_obj))
             else:
                 enemy_obj.hp = 0
         else:
@@ -91,9 +91,9 @@ class City(MilitaryObject):
 
             for p in calc_rewards_for:
                 if p == self.player:
-                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_obj_damage))
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.ENEMY_UNIT_DAMAGED, enemy_obj_damage, to_unit=self))
                 else:
-                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_obj_damage))
+                    rewards_dict[p].append(Rewards.get_named_reward(Rewards.OWN_UNIT_DAMAGED, enemy_obj_damage, to_unit=enemy_obj))
 
         self.mp = 0
         self.path = []
@@ -103,13 +103,13 @@ class City(MilitaryObject):
 
     @profile
     def move(self, game, calc_rewards_for):
-        rewards_list_dict = []
+        rewards_dict = {player: [] for player in calc_rewards_for}
 
         # check if ranged unit inside the attack radius
         ranged_target = self.get_ranged_target(game)
         if ranged_target is not None:
-            enemy_obj_damage, rewards_dict = self.ranged_attack(game, ranged_target.r, ranged_target.c, calc_rewards_for)
-            rewards_list_dict.append(rewards_dict)
+            enemy_obj_damage, rew_dict = self.ranged_attack(game, ranged_target.r, ranged_target.c, calc_rewards_for)
+            rewards_dict.append(rew_dict)
 
             game.logger.log_event(RangedAttackEvent(self,
                                                     target=ranged_target,
@@ -117,7 +117,7 @@ class City(MilitaryObject):
 
         game.update()
 
-        return rewards_list_dict
+        return rewards_dict
 
     def change_ownership(self, new_player):
         self.player.cities.remove(self)

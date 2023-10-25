@@ -52,7 +52,7 @@ class Diplomacy:
 class Game:
     COMBAT_MINIMUM_DAMAGE = 1
 
-    # @log("Start new game")
+
     @profile
     def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=30, silent=False) -> None:
 
@@ -60,19 +60,6 @@ class Game:
         self._is_started = False
 
         self.silent = silent
-
-        # player1 = Player('Rome')
-        # player1.ai = SimpleAI(self, player1)
-        #
-        # player2 = Player('Egypt')
-        # player2.ai = PolicyGradientAI(self, player2)
-
-        # player2 = Player('Egypt', ai=DoNothingAI(self))
-        # player2 = Player('Egypt', ai=SimpleAI(self))
-        # player3 = Player('Babylon')
-        # player3.ai = SimpleAIHikikomori(self, player3)
-
-        # self.players = [player1, player2, player3]
 
         self._counter = 0
         self.autoplay_max_turns = autoplay_max_turns

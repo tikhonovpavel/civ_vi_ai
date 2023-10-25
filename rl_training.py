@@ -237,7 +237,7 @@ class QLearningAI(TrainableAI):
         # false only if unit on the cell is of the same nation as the player
         return len(cell_obj.game_objects) == 0 or cell_obj.game_objects[0].player.nation != player.nation
 
-    def create_paths(self):
+    def create_paths(self, queued_rewards):
         player = self.player
 
         log_prob_turn_total = torch.zeros(1)
@@ -245,14 +245,19 @@ class QLearningAI(TrainableAI):
 
         if not self.silent:
             print(f'Units to create_paths for ({len(self.player.units)}): {self.player.units}')
-        for i, unit in reversed(list(enumerate(player.units))):
 
+        for i, unit in reversed(list(enumerate(player.units))):
             if not self.silent:
                 print(f'Creating paths for <{unit}> (turn {self.game.turn_number}). hp={unit.hp}, mp={unit.mp}')
 
             new_state = None
             new_state_legal_actions = None
             actions_taken_count = 1
+
+            
+
+
+
 
             while True:
                 if new_state is None:

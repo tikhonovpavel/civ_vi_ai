@@ -37,6 +37,7 @@ class TrainingSession:
         with open('init_states/training_configs/1vs1_very_easy.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
+        queued_rewards = []
         models, replay_buffer = None, None
         for i in tqdm(range(1, n_games)):
             game = Game(config, screen, None, sound_on=False,
@@ -59,8 +60,12 @@ class TrainingSession:
 
                 game.logger.start_turn(current_player.nation)
 
-                # The most important line:
-                current_player.create_paths()  
+                # The most important lines:
+                if current_player == rl_player:
+                    current_player.create_paths(queued_rewards=queued_rewards)  
+                    queued_rewards = []
+                else:
+                    current_player.create_paths()
 
                 if game.turn_number > 20:
                     self.handle_game_end(rl_player, is_victory=False)
@@ -74,8 +79,11 @@ class TrainingSession:
                     if current_player.nation == 'Rome':
                         print('hoba')
 
-                    res = obj.move(game, calc_rewards_for=[rl_player])#[0]
-                    print(f'res of the move: {res}')
+                    res = obj.move(game, calc_rewards_for=[rl_player])[rl_player]
+                    queued_rewards.extend(res)
+
+                    print(queued_rewards)
+
                     obj.gain_hps()
 
                     obj.mp = obj.mp_base

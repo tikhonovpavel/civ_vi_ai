@@ -36,31 +36,11 @@ class Player:
     def game_objects(self):
         return self.units + self.cities
 
-    # @property
-    # def reward(self):
-    #     return self._reward
-
-    # @property
-    # def reward_cum(self):
-    #     return self._reward_cum
-
-    # def add_reward(self, value):
-    #     self._reward += value
-    #     self._reward_cum += value
-
-    # def reset_reward(self):
-    #     self._reward = 0
-
-    #
-    # @reward.setter
-    # def reward(self, value):
-    #     self._reward = value
-
-    def create_paths(self):
+    def create_paths(self, **kwargs):
         if not self.is_ai:
             raise Exception('create_paths can be called only on AI players')
 
-        self.ai.create_paths()
+        self.ai.create_paths(**kwargs)
 
     # def add_unit(self, unit_type, r, c):
     #     unit = unit_type(self, r, c)
