@@ -146,8 +146,8 @@ class ReplayBuffer:
                 transition.movement_number,
                 str(transition.unit),
                 transition.a,
-                '+'.join(k for k, v in transition.r.items() if isinstance(v, numbers.Number)),
-                '+'.join(str(v) for v in transition.r.values() if isinstance(v, numbers.Number)),
+                ' + '.join(next(k for k, v in r.items() if isinstance(v, numbers.Number)) for r in transition.r),
+                ''.join(next((f'+{v}' if v >= 0 else str(v)) for v in r.values() if isinstance(v, numbers.Number)) for r in transition.r) + f'={transition.total_reward}',
                 "None" if transition.s is None else "+",
                 "None" if transition.s_next is None else "+"
             ]
