@@ -19,7 +19,7 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 900
 
 class TrainingSession:
-    def __init__(self, silent=False, n_games=500, episode_max_length=10):
+    def __init__(self, silent=False, n_games=500, episode_max_length=7):
         self.silent = silent
         self.n_games = n_games
         self.episode_max_length = episode_max_length
@@ -185,7 +185,7 @@ class TrainingSession:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Start a training session.")
     parser.add_argument('--n_games', type=int, default=500, help="Number of games to play.")
-    parser.add_argument('--episode_max_length', type=int, default=10, help="Maximum length of an episode.")
+    parser.add_argument('--episode_max_length', type=int, default=7, help="Maximum length of an episode.")
     parser.add_argument('--silent', action='store_true', help="Run in silent mode without displaying the game.")
     args = parser.parse_args()
 

@@ -348,25 +348,6 @@
           "image_path": "assets/units/artillery.png"
         },
 
-
-
-
-
-        {
-          "path": [],
-          "name": "Blast Barricade",
-          "category": "artillery",
-          "r": 12,
-          "c": 1,
-          "role": "ranged",
-          "ranged_strength_base": 90,
-          "range_radius_base": 2,
-          "combat_strength_base": 70,
-          "hp": 100,
-          "mp": 3,
-          "mp_base": 3,
-          "image_path": "assets/units/artillery.png"
-        },
         {
           "path": [],
           "name": "Mortar Mauler",
@@ -426,9 +407,39 @@
           "mp": 4,
           "mp_base": 4,
           "image_path": "assets/units/tank.png"
+        },
+
+        {
+          "path": [],
+          "name": "Blast Barricade",
+          "category": "tank",
+          "r": 12,
+          "c": 1,
+          "role": "ranged",
+          "ranged_strength_base": 90,
+          "range_radius_base": 2,
+          "combat_strength_base": 70,
+          "hp": 100,
+          "mp": 4,
+          "mp_base": 4,
+          "image_path": "assets/units/tank.png"
+        },
+
+        {
+          "path": [],
+          "name": "Thunder Tank",
+          "category": "tank",
+          "r": 11,
+          "c": 2,
+          "role": "combat",
+          "ranged_strength_base": 0,
+          "range_radius_base": 0,
+          "combat_strength_base": 85,
+          "hp": 100,
+          "mp": 4,
+          "mp_base": 4,
+          "image_path": "assets/units/tank.png"
         }
-
-
 
       ]
     },
@@ -561,7 +572,7 @@
           "ranged_strength_base": 90,
           "range_radius_base": 2,
           "combat_strength_base": 70,
-          "hp": 100,
+          "hp": 90,
           "mp": 3,
           "mp_base": 3,
           "image_path": "assets/units/artillery.png"
@@ -576,7 +587,7 @@
           "ranged_strength_base": 0,
           "range_radius_base": 0,
           "combat_strength_base": 85,
-          "hp": 100,
+          "hp": 90,
           "mp": 4,
           "mp_base": 4,
           "image_path": "assets/units/tank.png"
@@ -591,7 +602,7 @@
           "ranged_strength_base": 0,
           "range_radius_base": 0,
           "combat_strength_base": 85,
-          "hp": 100,
+          "hp": 90,
           "mp": 4,
           "mp_base": 4,
           "image_path": "assets/units/tank.png"
@@ -606,11 +617,47 @@
           "ranged_strength_base": 0,
           "range_radius_base": 0,
           "combat_strength_base": 85,
-          "hp": 100,
+          "hp": 90,
+          "mp": 4,
+          "mp_base": 4,
+          "image_path": "assets/units/tank.png"
+        },
+
+
+
+        {
+          "path": [],
+          "name": "Siege Sentinel",
+          "category": "tank",
+          "r": 3,
+          "c": 1,
+          "role": "combat",
+          "ranged_strength_base": 0,
+          "range_radius_base": 0,
+          "combat_strength_base": 85,
+          "hp": 90,
+          "mp": 4,
+          "mp_base": 4,
+          "image_path": "assets/units/tank.png"
+        },
+
+        {
+          "path": [],
+          "name": "Juggernaut Jolt",
+          "category": "tank",
+          "r": 2,
+          "c": 2,
+          "role": "combat",
+          "ranged_strength_base": 0,
+          "range_radius_base": 0,
+          "combat_strength_base": 85,
+          "hp": 90,
           "mp": 4,
           "mp_base": 4,
           "image_path": "assets/units/tank.png"
         }
+
+
       ]
     }
   ]
