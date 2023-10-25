@@ -126,6 +126,9 @@ class QLearningAI(TrainableAI):
 
         self.game_n = game_n
 
+        self.online_model.to('cuda')
+        self.reference_model.to('cuda')
+
         return (self.online_model, self.reference_model), self.replay_buffer
 
     def update_models(self):
