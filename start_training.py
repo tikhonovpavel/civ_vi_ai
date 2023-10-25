@@ -1,15 +1,18 @@
 import json
 import os
+import pickle
 from tqdm import tqdm
 import argparse
 from matplotlib import pyplot as plt
 
 from game import Game
+from replay_buffer import ReplayBuffer
 from rl_training import QLearningAI
 from rewards_values import Rewards
 
 from line_profiler_pycharm import profile
 import pygame
+import torch
 
 
 SCREEN_WIDTH = 1000
@@ -25,11 +28,14 @@ class TrainingSession:
     @profile
     def start_training(self):
 
-        pygame.init()
-        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        screen.fill((255, 255, 255))
-        clock = pygame.time.Clock()
-        clock.tick(60)
+        if not self.silent:
+            pygame.init()
+            screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+            screen.fill((255, 255, 255))
+            clock = pygame.time.Clock()
+            clock.tick(60)
+        else:
+            screen = None
 
         n_games = self.n_games
         episode_max_length = self.episode_max_length
@@ -37,8 +43,25 @@ class TrainingSession:
         with open('init_states/training_configs/1vs1_very_easy.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
-        models, replay_buffer = None, None
-        for i in tqdm(range(1, n_games)):
+
+        start_game_index = 1#450
+
+        models = None
+        replay_buffer = None
+        
+
+        # model_lambda = QLearningAI(None, None).model_lambda
+        # online_model = model_lambda()
+        # reference_model = model_lambda()
+        # online_model.load_state_dict(torch.load(f'weights/online_model_game_{start_game_index}.pt'))
+        # reference_model.load_state_dict(torch.load(f'weights/reference_model_game_{start_game_index}.pt'))
+
+        # models = online_model, reference_model
+        # replay_buffer = ReplayBuffer(capacity=500)
+
+        best_reward = float('-inf')  # начальное значение - бесконечно маленькое
+        
+        for i in tqdm(range(start_game_index, n_games)):
             game = Game(config, screen, None, sound_on=False,
                     autoplay=True, autoplay_max_turns=episode_max_length, silent=self.silent)
             models, replay_buffer = game.players[0].ai.init(i, *(models, replay_buffer))
@@ -56,7 +79,7 @@ class TrainingSession:
 
                 if not self.silent:
                     print(f'\n\n== [Game {i}] {current_player.nation} started the turn {game.turn_number} '
-                        f'with {len(current_player.units)} units and {len(current_player.cities)} cities: ==')
+                          f'with {len(current_player.units)} units and {len(current_player.cities)} cities: ==')
 
                 game.logger.start_turn(current_player.nation)
 
@@ -71,7 +94,7 @@ class TrainingSession:
                     self.handle_game_end(rl_player, is_victory=False)
                     break
 
-                if game.check_winning_conditions(current_player, no_units_eq_lose=True):
+                if game.check_winning_conditions(current_player, no_units_eq_lose=False):
                     self.handle_game_end(rl_player, isinstance(current_player.ai, QLearningAI))
                     break
 
@@ -90,7 +113,7 @@ class TrainingSession:
                     obj.can_attack = True
                     obj.is_selected = False
 
-                if game.check_winning_conditions(current_player, no_units_eq_lose=True):
+                if game.check_winning_conditions(current_player, no_units_eq_lose=False):
                     self.handle_game_end(rl_player, isinstance(current_player.ai, QLearningAI))
                     break
 
@@ -115,13 +138,28 @@ class TrainingSession:
             print(f'At the end of the game {i}, the rewards: {game_reward}')
             self.rewards.append(game_reward)
 
+            if game_reward > best_reward:
+                best_reward = game_reward
+                torch.save(models[0].state_dict(), f'weights/best_online_model_game_{str(i).zfill(5)}_score_{game_reward}.pt')
+                torch.save(models[1].state_dict(), f'weights/best_reference_model_game_{str(i).zfill(5)}_score_{game_reward}.pt')
+
+            if i % 100 == 0:
+                torch.save(models[0].state_dict(), f'weights/online_model_game_{str(i).zfill(5)}.pt')
+                torch.save(models[1].state_dict(), f'weights/reference_model_game_{str(i).zfill(5)}.pt')
+
+                self.plot_rewards(f'rewards_history/game_{str(i).zfill(5)}.png')
+
             rl_player.ai.update_models()
 
-        self.plot_rewards()
+        self.plot_rewards('rewards_history/final_result.png')
 
     def handle_game_end(self, rl_player, is_victory):
         reward_value = Rewards.get_named_reward(Rewards.VICTORY) if is_victory else Rewards.get_named_reward(Rewards.DEFEAT)
         print('QLearningAI won!' if is_victory else 'QLearningAI lost')
+
+
+        if is_victory:
+            print()
         
         for transition in rl_player.ai.replay_buffer.get_unfinished_transitions():
             rl_player.ai.replay_buffer.update_new_state_and_reward(turn_number=transition.turn_number,
@@ -134,11 +172,11 @@ class TrainingSession:
             print(f'Replay buffer final state:')
             print(rl_player.ai.replay_buffer)
 
-    def plot_rewards(self):
+    def plot_rewards(self, path):
         plt.figure(figsize=(10, 5))
         plt.plot(self.rewards, label='rewards')
         plt.legend()
-        plt.savefig('rewards.png')
+        plt.savefig(path)
 
     @staticmethod
     def cls():

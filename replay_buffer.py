@@ -136,7 +136,7 @@ class ReplayBuffer:
         return unfinished_transitions
 
     def __str__(self):
-        headers = ["Game", "Turn", "Move", "Unit", "Action", "Reward", "State", "State Next"]
+        headers = ["Game", "Turn", "Move", "Unit", "Action", "RewardNames", "RewardValues", "State", "State Next"]
         table_data = []
 
         for transition in self.buffer:
@@ -146,7 +146,8 @@ class ReplayBuffer:
                 transition.movement_number,
                 str(transition.unit),
                 transition.a,
-                transition.r,
+                '+'.join(k for k, v in transition.r.items() if isinstance(v, numbers.Number)),
+                '+'.join(str(v) for v in transition.r.values() if isinstance(v, numbers.Number)),
                 "None" if transition.s is None else "+",
                 "None" if transition.s_next is None else "+"
             ]

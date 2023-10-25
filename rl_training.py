@@ -80,7 +80,7 @@ class QLearningAI(TrainableAI):
 
         self.game_n = None
 
-        self.__model_lambda = lambda: nn.Sequential(
+        self.model_lambda = lambda: nn.Sequential(
             nn.Conv2d(17, 32, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
@@ -105,8 +105,8 @@ class QLearningAI(TrainableAI):
         if models is None:
             assert replay_buffer is None
 
-            self.online_model = self.__model_lambda()
-            self.reference_model = self.__model_lambda()
+            self.online_model = self.model_lambda()
+            self.reference_model = self.model_lambda()
             self.reference_model.load_state_dict(self.online_model.state_dict())
 
             self.replay_buffer = self.__replay_buffer_lambda()
@@ -267,15 +267,18 @@ class QLearningAI(TrainableAI):
                 queued_rewards_dict[unit_name].append(reward)
 
             destroyed_units = [unit for unit in queued_rewards_dict.keys() if unit not in self.player.units]
-            if len(destroyed_units):
+            if len(destroyed_units) and not self.silent:
                 print('We have some units which were destroyed on the previous turn:')
                 pprint(destroyed_units)
                 print()
             
             for d_unit in destroyed_units:
-                print(f'Applying the queued rewards for (destoyed) unit {d_unit}:')
                 assert len(queued_rewards_dict[d_unit]) > 0
-                pprint(queued_rewards_dict[d_unit])
+                
+                if not self.silent:
+                    print(f'Applying the queued rewards for (destoyed) unit {d_unit}:')
+                    pprint(queued_rewards_dict[d_unit])
+
                 self.replay_buffer.update_new_state_and_reward(
                     turn_number=self.game.turn_number - 1,
                     unit=unit,
@@ -301,13 +304,12 @@ class QLearningAI(TrainableAI):
 
                     if len(queued_rewards) > 0:
                         unit_queued_rewards = [r for r in queued_rewards if r['to_unit'] == unit]
+                        
+                        if not self.silent:
+                            print(f'Applying the queued rewards for unit {unit}:')
+                            pprint(unit_queued_rewards)
 
-                        print(f'Applying the queued rewards for unit {unit}:')
-                        pprint(unit_queued_rewards)
-
-                        # print('Replay buffer:')
-                        # print(self.replay_buffer)
-                        print()
+                            print()
 
 
                         self.replay_buffer.update_new_state_and_reward(
