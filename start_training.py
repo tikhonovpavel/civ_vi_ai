@@ -94,7 +94,7 @@ class TrainingSession:
                     self.handle_game_end(rl_player, is_victory=False)
                     break
 
-                if game.check_winning_conditions(current_player, no_units_eq_lose=False):
+                if game.check_winning_conditions(current_player, no_units_eq_lose=True):
                     self.handle_game_end(rl_player, isinstance(current_player.ai, QLearningAI))
                     break
 
@@ -113,7 +113,7 @@ class TrainingSession:
                     obj.can_attack = True
                     obj.is_selected = False
 
-                if game.check_winning_conditions(current_player, no_units_eq_lose=False):
+                if game.check_winning_conditions(current_player, no_units_eq_lose=True):
                     self.handle_game_end(rl_player, isinstance(current_player.ai, QLearningAI))
                     break
 

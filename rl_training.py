@@ -126,8 +126,8 @@ class QLearningAI(TrainableAI):
 
         self.game_n = game_n
 
-        self.online_model.to('cuda')
-        self.reference_model.to('cuda')
+        self.online_model.to(self.device)
+        self.reference_model.to(self.device)
 
         return (self.online_model, self.reference_model), self.replay_buffer
 
