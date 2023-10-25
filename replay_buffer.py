@@ -1,6 +1,8 @@
+import numbers
 import random
 from dataclasses import dataclass
 from typing import List, Dict
+
 
 import torch
 from tabulate import tabulate
@@ -25,7 +27,9 @@ class Transition:
 
     @property
     def total_reward(self):
-        return sum([event[list(event.keys())[0]] for event in self.r])
+        return sum([event[key] for event in self.r for key in event
+                    if isinstance(event[key], numbers.Number)])
+
 
 
 class ReplayBuffer:
@@ -71,7 +75,7 @@ class ReplayBuffer:
         - More than one candidate for update is found.
         """
 
-        if not isinstance(additional_reward, dict):
+        if not isinstance(additional_reward, list):
             raise Exception()
 
         # if additional_reward.get('OWN_UNIT_DESTROYED', None) is not None and unit.name == 'Shockwave Spitter':
@@ -92,7 +96,7 @@ class ReplayBuffer:
 
                 transition.s_next = new_state
                 transition.legal_actions_s_next = new_state_legal_action
-                transition.r.append(additional_reward)  # Add the additional reward to the list
+                transition.r.extend(additional_reward)  # Add the additional reward to the list
                 updated = True
                 break
 

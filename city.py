@@ -109,7 +109,8 @@ class City(MilitaryObject):
         ranged_target = self.get_ranged_target(game)
         if ranged_target is not None:
             enemy_obj_damage, rew_dict = self.ranged_attack(game, ranged_target.r, ranged_target.c, calc_rewards_for)
-            rewards_dict.append(rew_dict)
+            for player, rewards in rew_dict.items():
+                rewards_dict[player].extend(rewards)
 
             game.logger.log_event(RangedAttackEvent(self,
                                                     target=ranged_target,

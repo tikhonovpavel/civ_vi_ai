@@ -24,13 +24,6 @@ class UnitState:
     DEFENCE = 2
 
 
-# class UnitCategories:
-#     CITY = 0
-#     GREAT_PERSON = 1
-#     CITIZEN = 2
-#     MILITARY = 3
-
-
 DEFAULT_TILE_COLOR = (0, 255, 0)
 SELECTED_TILE_COLOR = (0, 128, 0)
 DEFAULT_NATION_IMAGE_SIZE = (15, 10)
@@ -420,7 +413,7 @@ class Unit(MilitaryObject):
             width=1)
 
     def __repr__(self):
-        return f'{self.name} at {hex(id(self))}'
+        return f'<{self.name}>'# at {hex(id(self))}>'
 
 class Units:
     Tank = lambda player, r, c: Unit('tank', player, r, c,

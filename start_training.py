@@ -37,12 +37,12 @@ class TrainingSession:
         with open('init_states/training_configs/1vs1_very_easy.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
-        queued_rewards = []
         models, replay_buffer = None, None
         for i in tqdm(range(1, n_games)):
             game = Game(config, screen, None, sound_on=False,
                     autoplay=True, autoplay_max_turns=episode_max_length, silent=self.silent)
             models, replay_buffer = game.players[0].ai.init(i, *(models, replay_buffer))
+            queued_rewards = []
 
             rl_player = game.players[0]
 
@@ -67,7 +67,7 @@ class TrainingSession:
                 else:
                     current_player.create_paths()
 
-                if game.turn_number > 20:
+                if game.turn_number > episode_max_length:
                     self.handle_game_end(rl_player, is_victory=False)
                     break
 
@@ -76,13 +76,13 @@ class TrainingSession:
                     break
 
                 for obj in current_player.game_objects:
-                    if current_player.nation == 'Rome':
-                        print('hoba')
+                    # if current_player.nation == 'Rome':
+                    #     print('hoba')
 
                     res = obj.move(game, calc_rewards_for=[rl_player])[rl_player]
                     queued_rewards.extend(res)
 
-                    print(queued_rewards)
+                    # print(queued_rewards)
 
                     obj.gain_hps()
 
@@ -108,6 +108,8 @@ class TrainingSession:
                 game.subturn_number += 1
                 if game.subturn_number % len(game.players) == 0:
                     game.turn_number += 1
+
+                # print(rl_player.ai.replay_buffer)
 
             game_reward = rl_player.ai.replay_buffer.get_last_game_total_reward()
             print(f'At the end of the game {i}, the rewards: {game_reward}')

@@ -1,8 +1,8 @@
 import random
-
 import torch
 import numpy as np
 from line_profiler_pycharm import profile
+from pprint import pprint
 
 import torch.optim as optim
 import torch.nn as nn
@@ -10,6 +10,8 @@ import torch.nn as nn
 from replay_buffer import ReplayBuffer, Transition
 from rewards_values import Rewards
 from ai import TrainableAI
+
+
 
 # playing the following game:
 
@@ -244,20 +246,42 @@ class QLearningAI(TrainableAI):
         log_prob_turn_total.requires_grad = True
 
         if not self.silent:
-            print(f'Units to create_paths for ({len(self.player.units)}): {self.player.units}')
+            print(f'Units to create_paths for ({len(self.player.units)}):')
+            pprint(self.player.units)
+            print()
 
         for i, unit in reversed(list(enumerate(player.units))):
             if not self.silent:
-                print(f'Creating paths for <{unit}> (turn {self.game.turn_number}). hp={unit.hp}, mp={unit.mp}')
+                print(f'Creating paths for {unit} (turn {self.game.turn_number}). hp={unit.hp}, mp={unit.mp}')
 
             new_state = None
             new_state_legal_actions = None
             actions_taken_count = 1
 
+            queued_rewards_dict = {}
+            for entry in queued_rewards:
+                unit_name = entry['to_unit']
+                reward = {k: v for k, v in entry.items() if k != 'to_unit'}
+                if unit_name not in queued_rewards_dict:
+                    queued_rewards_dict[unit_name] = []
+                queued_rewards_dict[unit_name].append(reward)
+
+            destroyed_units = [unit for unit in queued_rewards_dict.keys() if unit not in self.player.units]
+            if len(destroyed_units):
+                print('We have some units which were destroyed on the previous turn:')
+                pprint(destroyed_units)
+                print()
             
-
-
-
+            for d_unit in destroyed_units:
+                print(f'Applying the queued rewards for (destoyed) unit {d_unit}:')
+                assert len(queued_rewards_dict[d_unit]) > 0
+                pprint(queued_rewards_dict[d_unit])
+                self.replay_buffer.update_new_state_and_reward(
+                    turn_number=self.game.turn_number - 1,
+                    unit=unit,
+                    new_state=None,
+                    additional_reward=queued_rewards_dict[d_unit],
+                    new_state_legal_action=None,)
 
             while True:
                 if new_state is None:
@@ -265,6 +289,7 @@ class QLearningAI(TrainableAI):
                     state = self.create_input_tensor(unit).to(self.device)
                     legal_actions = self.get_legal_actions(unit)
 
+                    # REDUNDANT:
                     # если это первый ход, то значит этого товарища ещё нет в реплей баффере, поэтому ничего не делаем
                     #
                     # но если это не первый ход внутри одной игры, то тогда последнее состояние юнита в баффере должно быть None
@@ -274,13 +299,31 @@ class QLearningAI(TrainableAI):
                     # юнит удаляется из списка player.units, то этот случай получается здесь не надо это учитывать,
                     # и обработка уже произошла в методе destroy в момент убийства
 
-                    if self.game.turn_number > 1:
+                    if len(queued_rewards) > 0:
+                        unit_queued_rewards = [r for r in queued_rewards if r['to_unit'] == unit]
+
+                        print(f'Applying the queued rewards for unit {unit}:')
+                        pprint(unit_queued_rewards)
+
+                        # print('Replay buffer:')
+                        # print(self.replay_buffer)
+                        print()
+
+
                         self.replay_buffer.update_new_state_and_reward(
                             turn_number=self.game.turn_number - 1,
                             unit=unit,
                             new_state=state,
-                            additional_reward=Rewards.get_named_reward(Rewards.SURVIVED_THE_TURN),
+                            additional_reward=unit_queued_rewards,
                             new_state_legal_action=legal_actions,)
+
+                    # if self.game.turn_number > 1:
+                    #     self.replay_buffer.update_new_state_and_reward(
+                    #         turn_number=self.game.turn_number - 1,
+                    #         unit=unit,
+                    #         new_state=state,
+                    #         additional_reward=Rewards.get_named_reward(Rewards.SURVIVED_THE_TURN),
+                    #         new_state_legal_action=legal_actions,)
 
                 else:
                     state = new_state
@@ -303,7 +346,7 @@ class QLearningAI(TrainableAI):
                         print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {target_coords}.'
                         f' (1/{len(legal_actions)} legal actions)')
                 
-                    reward = unit.move_one_cell(self.game, *target_coords, calc_rewards_for=[self.player])
+                    reward = unit.move_one_cell(self.game, *target_coords, calc_rewards_for=[self.player])[self.player]
                 else:
                     # just stay where we are x2
                     if not self.silent:
@@ -313,7 +356,7 @@ class QLearningAI(TrainableAI):
 
                     target_coords = unit.coords
 
-                    reward = [Rewards.get_named_reward(Rewards.STAYING_WHERE_HE_IS)]
+                    reward = [Rewards.get_named_reward(Rewards.STAYING_WHERE_HE_IS, to_unit='self')]
 
                     # ну что ж, выбор оставаться на месте - окончательный. 
                     # Даже если у юнита остались ОП, мы на это забиваем, и переходим к следующему юниту
