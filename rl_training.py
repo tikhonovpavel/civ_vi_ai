@@ -138,11 +138,11 @@ class QLearningAI(TrainableAI):
         next_states = [transition.s_next for transition in replay_buffer_sample]
         legal_actions_s_next = [transition.legal_actions_s_next for transition in replay_buffer_sample]
 
-        state_tensor_batch = torch.stack(states).to(self.device).squeeze()
-        action_tensor_batch = torch.tensor(actions, dtype=torch.long).to(self.device)
-        reward_tensor_batch = torch.tensor(rewards, dtype=torch.float32).to(self.device)
+        state_tensor_batch = torch.stack(states).squeeze()
+        action_tensor_batch = torch.tensor(actions, dtype=torch.long)
+        reward_tensor_batch = torch.tensor(rewards, dtype=torch.float32)
 
-        next_state_values = torch.zeros(len(replay_buffer_sample), dtype=torch.float32).to(self.device)
+        next_state_values = torch.zeros(len(replay_buffer_sample), dtype=torch.float32)
 
         non_terminal_indices = [i for i, state in enumerate(next_states) if state is not None]
 
@@ -166,9 +166,11 @@ class QLearningAI(TrainableAI):
                                         state_tensor_batch_vflipped,
                                         state_tensor_batch_hflipped,
                                         state_tensor_batch_vhflipped), 0)
+        state_tensor_batch = state_tensor_batch.to(self.device)
 
         # the reference_pred will not change under the flips:
         reference_pred = torch.cat((reference_pred,  reference_pred, reference_pred, reference_pred))
+        reference_pred = reference_pred.to(self.device)
 
         # but actions will:
         vmapping = {0: 5, 5: 0, 2: 3, 3: 2, 1: 4, 4: 1, 6: 6}
@@ -182,9 +184,13 @@ class QLearningAI(TrainableAI):
                                          action_tensor_batch_vflipped,
                                          action_tensor_batch_hflipped,
                                          action_tensor_batch_vhflipped))
+        action_tensor_batch = action_tensor_batch.unsqueeze(-1).to(self.device)
         # ------------------------------------------------------------------------------------------
 
-        model_pred = self.online_model(state_tensor_batch).gather(1, action_tensor_batch.unsqueeze(-1)).squeeze(-1)
+        if not self.silent:
+            print(f'After the augmentation the size become: {len(state_tensor_batch)}')
+
+        model_pred = self.online_model(state_tensor_batch).gather(1, action_tensor_batch).squeeze(-1)
 
         loss = 1. / len(state_tensor_batch) * ((reference_pred - model_pred) ** 2).sum()
 
