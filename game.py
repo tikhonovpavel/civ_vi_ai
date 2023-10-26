@@ -55,7 +55,7 @@ class Game:
 
     @profile
     def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=30,
-                 replay_buffer_size=None, silent=False) -> None:
+                 replay_buffer_size=500, silent=False) -> None:
 
 
         self._is_started = False
@@ -77,7 +77,12 @@ class Game:
             player = Player(p['nation'], silent=silent)
 
             if 'ai' in p and p['ai']:
-                player.ai = globals()[p['ai']](self, player, silent=self.silent, replay_buffer_size=replay_buffer_size)
+                kwargs = dict(silent=self.silent)
+
+                if p['ai'] == 'QLearningAI':
+                    kwargs['replay_buffer_size'] = replay_buffer_size
+
+                player.ai = globals()[p['ai']](self, player, **kwargs)
 
             self.players.append(player)
 
