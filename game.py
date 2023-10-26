@@ -54,7 +54,8 @@ class Game:
 
 
     @profile
-    def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=30, silent=False) -> None:
+    def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=30,
+                 replay_buffer_size=None, silent=False) -> None:
 
 
         self._is_started = False
@@ -76,7 +77,7 @@ class Game:
             player = Player(p['nation'], silent=silent)
 
             if 'ai' in p and p['ai']:
-                player.ai = globals()[p['ai']](self, player, silent=self.silent)
+                player.ai = globals()[p['ai']](self, player, silent=self.silent, replay_buffer_size=replay_buffer_size)
 
             self.players.append(player)
 

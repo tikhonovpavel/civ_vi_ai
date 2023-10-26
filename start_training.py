@@ -20,10 +20,11 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 900
 
 class TrainingSession:
-    def __init__(self, silent=False, n_games=500, episode_max_length=5):
+    def __init__(self, silent=False, n_games=500, episode_max_length=5, replay_buffer_size=500):
         self.silent = silent
         self.n_games = n_games
         self.episode_max_length = episode_max_length
+        self.replay_buffer_size = replay_buffer_size
         self.rewards = []
 
     @profile
@@ -50,7 +51,6 @@ class TrainingSession:
         with open('init_states/training_configs/1vs1_very_easy.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
-
         start_game_index = 1#450
 
         models = None
@@ -69,8 +69,8 @@ class TrainingSession:
         best_reward = float('-inf')  # начальное значение - бесконечно маленькое
         
         for i in tqdm(range(start_game_index, n_games)):
-            game = Game(config, screen, None, sound_on=False,
-                    autoplay=True, autoplay_max_turns=episode_max_length, silent=self.silent)
+            game = Game(config, screen, None, sound_on=False, autoplay=True, autoplay_max_turns=episode_max_length,
+                        replay_buffer_size=self.replay_buffer_size, silent=self.silent)
             models, replay_buffer = game.players[0].ai.init(i, *(models, replay_buffer))
             queued_rewards = []
 
@@ -186,7 +186,7 @@ class TrainingSession:
     def plot_rewards(self, path):
         plt.figure(figsize=(10, 5))
         plt.plot(self.rewards, label='rewards')
-        plt.plot(self.running_average(self.rewards, 100))
+        plt.plot(self.running_average(self.rewards, 50))
         
         plt.legend()
         plt.savefig(path)
@@ -198,11 +198,13 @@ class TrainingSession:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Start a training session.")
     parser.add_argument('--n_games', type=int, default=500, help="Number of games to play.")
+    parser.add_argument('--replay_buffer_size', type=int, default=500, help="Size of the replay buffer.")
     parser.add_argument('--episode_max_length', type=int, default=5, help="Maximum length of an episode.")
     parser.add_argument('--silent', action='store_true', help="Run in silent mode without displaying the game.")
     args = parser.parse_args()
 
     TrainingSession.cls()
     print(args.silent)
-    ts = TrainingSession(silent=args.silent, n_games=args.n_games, episode_max_length=args.episode_max_length)
+    ts = TrainingSession(silent=args.silent, n_games=args.n_games,
+                         episode_max_length=args.episode_max_length, replay_buffer_size=args.replay_buffer_size)
     ts.start_training()

@@ -57,8 +57,8 @@ class PolarCoordinatesLayer(torch.nn.Module):
 
 
 class QLearningAI(TrainableAI):
-    def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, gamma=0.98,
-                 reference_model_update_interval=5, max_replay_buffer_sample=200, device='cuda', silent=False):
+    def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, gamma=0.98, replay_buffer_size=500,
+                 reference_model_update_interval=5, max_replay_buffer_sample=300, device='cuda', silent=False):
         super(QLearningAI, self).__init__(game, player, silent)
         self.optimizer = None
         self.max_distance_from_enemy = max_distance_from_enemy
@@ -91,7 +91,7 @@ class QLearningAI(TrainableAI):
             nn.ReLU(),
             nn.Linear(256, 7)
         )
-        self.__replay_buffer_lambda = lambda: ReplayBuffer(capacity=500)
+        self.__replay_buffer_lambda = lambda: ReplayBuffer(capacity=replay_buffer_size)
 
         self.replay_buffer = None
         self.max_replay_buffer_sample = max_replay_buffer_sample
