@@ -58,15 +58,12 @@ class PolarCoordinatesLayer(torch.nn.Module):
 
 class QLearningAI(TrainableAI):
     def __init__(self, game, player, max_distance_from_enemy=3, lr=0.01, gamma=0.98,
-                 reference_model_update_interval=5, max_replay_buffer_sample=200, device='cuda', silent=False):
+                 reference_model_update_interval=5, max_replay_buffer_sample=200, device='cpu', silent=False):
         super(QLearningAI, self).__init__(game, player, silent)
         self.optimizer = None
         self.max_distance_from_enemy = max_distance_from_enemy
 
         self.device = device
-
-        self.std_rho = 1.0  # Tune this value based on your game
-        self.std_phi = 0.1  # Tune this value based on your game
 
         self.online_model = None
         self.reference_model = None
@@ -113,9 +110,6 @@ class QLearningAI(TrainableAI):
         else:
             self.online_model, self.reference_model = models
             self.replay_buffer = replay_buffer
-            # self.reference_model = self.__model_lambda()
-            #
-            # self.reference_model.load_state_dict(self.online_model.state_dict())
 
         for param in self.reference_model.parameters():
             param.requires_grad = False
@@ -144,21 +138,17 @@ class QLearningAI(TrainableAI):
         next_states = [transition.s_next for transition in replay_buffer_sample]
         legal_actions_s_next = [transition.legal_actions_s_next for transition in replay_buffer_sample]
 
-        state_tensor_batch = torch.stack(states).to(self.device)
+        state_tensor_batch = torch.stack(states).to(self.device).squeeze()
         action_tensor_batch = torch.tensor(actions, dtype=torch.long).to(self.device)
         reward_tensor_batch = torch.tensor(rewards, dtype=torch.float32).to(self.device)
 
-        # Изначально все next_state_values установим в 0
         next_state_values = torch.zeros(len(replay_buffer_sample), dtype=torch.float32).to(self.device)
 
-        # Найдем индексы не-None состояний и сохраним их
         non_terminal_indices = [i for i, state in enumerate(next_states) if state is not None]
 
-        # Теперь создадим тензор только из не-None состояний
         non_terminal_next_states = [next_states[i] for i in non_terminal_indices]
         non_terminal_next_state_tensor_batch = torch.stack(non_terminal_next_states).to(self.device)
 
-        # Вычисляем Q-значения для всех не-None следующих состояний
         non_terminal_next_state_values = self.reference_model(non_terminal_next_state_tensor_batch.squeeze())
 
         for idx, values in enumerate(non_terminal_next_state_values):
@@ -167,15 +157,40 @@ class QLearningAI(TrainableAI):
 
         reference_pred = reward_tensor_batch + self.gamma * next_state_values
 
-        # Для Q-сети нам нужно предсказать Q-значение для совершенного действия
-        model_pred = self.online_model(state_tensor_batch.squeeze()).gather(1, action_tensor_batch.unsqueeze(-1)).squeeze(-1)
+        # ------------------------------------------------------------------------------------------
+        # augment the input tensor with horizontal, vertical and horizontal-vertical flips
+        state_tensor_batch_vflipped = torch.flip(state_tensor_batch, [2])
+        state_tensor_batch_hflipped = torch.flip(state_tensor_batch, [3])
+        state_tensor_batch_vhflipped = torch.flip(state_tensor_batch, [2, 3])
+        state_tensor_batch = torch.cat((state_tensor_batch,
+                                        state_tensor_batch_vflipped,
+                                        state_tensor_batch_hflipped,
+                                        state_tensor_batch_vhflipped), 0)
 
-        loss = 1. / len(replay_buffer_sample) * ((reference_pred - model_pred) ** 2).sum()
+        # the reference_pred will not change under the flips:
+        reference_pred = torch.cat((reference_pred,  reference_pred, reference_pred, reference_pred))
 
-        # Обратное распространение ошибки
-        self.optimizer.zero_grad()  # Обнуляем градиенты
-        loss.backward()  # Вычисляем градиенты
-        self.optimizer.step()  # Обновляем веса
+        # but actions will:
+        vmapping = {0: 5, 5: 0, 2: 3, 3: 2, 1: 4, 4: 1, 6: 6}
+        hmapping = {0: 2, 2: 0, 3: 5, 5: 3, 1: 1, 4: 4, 6: 6}
+
+        action_tensor_batch_vflipped = torch.tensor([vmapping[val.item()] for val in action_tensor_batch])
+        action_tensor_batch_hflipped = torch.tensor([hmapping[val.item()] for val in action_tensor_batch])
+        action_tensor_batch_vhflipped = torch.tensor([hmapping[val.item()] for val in action_tensor_batch_vflipped])
+
+        action_tensor_batch = torch.cat((action_tensor_batch,
+                                         action_tensor_batch_vflipped,
+                                         action_tensor_batch_hflipped,
+                                         action_tensor_batch_vhflipped))
+        # ------------------------------------------------------------------------------------------
+
+        model_pred = self.online_model(state_tensor_batch).gather(1, action_tensor_batch.unsqueeze(-1)).squeeze(-1)
+
+        loss = 1. / len(state_tensor_batch) * ((reference_pred - model_pred) ** 2).sum()
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
         if self.game_n % self.reference_model_update_interval == 0:
             self.reference_model.load_state_dict(self.online_model.state_dict())
@@ -295,25 +310,13 @@ class QLearningAI(TrainableAI):
                     state = self.create_input_tensor(unit).to(self.device)
                     legal_actions = self.get_legal_actions(unit)
 
-                    # REDUNDANT:
-                    # если это первый ход, то значит этого товарища ещё нет в реплей баффере, поэтому ничего не делаем
-                    #
-                    # но если это не первый ход внутри одной игры, то тогда последнее состояние юнита в баффере должно быть None
-                    # и мы должны заменить его на текущее
-                    #
-                    # Note: если этого товарища убил противник своей атакой, то это был бы особый случай. Но поскольку тогда
-                    # юнит удаляется из списка player.units, то этот случай получается здесь не надо это учитывать,
-                    # и обработка уже произошла в методе destroy в момент убийства
-
                     if len(queued_rewards) > 0:
                         unit_queued_rewards = [r for r in queued_rewards if r['to_unit'] == unit]
                         
                         if not self.silent:
                             print(f'Applying the queued rewards for unit {unit}:')
                             pprint(unit_queued_rewards)
-
                             print()
-
 
                         self.replay_buffer.update_new_state_and_reward(
                             turn_number=self.game.turn_number - 1,
@@ -322,28 +325,14 @@ class QLearningAI(TrainableAI):
                             additional_reward=unit_queued_rewards,
                             new_state_legal_action=legal_actions,)
 
-                    # if self.game.turn_number > 1:
-                    #     self.replay_buffer.update_new_state_and_reward(
-                    #         turn_number=self.game.turn_number - 1,
-                    #         unit=unit,
-                    #         new_state=state,
-                    #         additional_reward=Rewards.get_named_reward(Rewards.SURVIVED_THE_TURN),
-                    #         new_state_legal_action=legal_actions,)
-
                 else:
                     state = new_state
 
                     assert new_state_legal_actions is not None
                     legal_actions = new_state_legal_actions
 
-                # if len(legal_actions) == 0:
-                #     # Если так получилось, то это самое первое действие юнита на этом ходу, а ему уже некуда идти
-                #     # значит е
-
                 chosen_action = self.select_action(state, legal_actions)
-                # chosen_action_old = chosen_action
-                # chosen_action = legal_cells[chosen_action]
-
+                
                 if chosen_action <= 5:
                     target_coords = self.game.map.get_neighbours_grid_coords(unit.r, unit.c)[chosen_action]
 
@@ -427,4 +416,3 @@ class QLearningAI(TrainableAI):
 
             if not self.silent:
                 print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
-            # print()

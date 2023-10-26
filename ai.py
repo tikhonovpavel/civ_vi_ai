@@ -93,8 +93,6 @@ class TrainableAI(AI):
         """
         :return: (n_units, n_layers, map_n_rows, map_n_columns)
         """
-        player = self.player
-
         map_tensor = self.convert_map_to_tensor()
 
         result = []
@@ -111,7 +109,6 @@ class TrainableAI(AI):
         reachable_cells_layer = reachable_cells_layer.unsqueeze(0)
 
         result.append(torch.vstack([map_tensor, current_unit_layer, reachable_cells_layer]))
-
         result = torch.stack(result)
 
         return result.float()

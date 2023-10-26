@@ -33,6 +33,7 @@ class TrainingSession:
         print(f'  Silent mode: {self.silent}')
         print(f'  Number of games: {self.n_games}')
         print(f'  Maximum episode length: {self.episode_max_length}')
+        print('\n\n')
 
         if not self.silent:
             pygame.init()
@@ -185,9 +186,7 @@ class TrainingSession:
     def plot_rewards(self, path):
         plt.figure(figsize=(10, 5))
         plt.plot(self.rewards, label='rewards')
-
-        plt.plot(self.running_average(self.rewards, 50))
-
+        plt.plot(self.running_average(self.rewards, 100))
         
         plt.legend()
         plt.savefig(path)
