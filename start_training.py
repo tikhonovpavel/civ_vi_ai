@@ -1,19 +1,18 @@
-import json
-import os
-import pickle
-import numpy as np
-from tqdm import tqdm
-import argparse
-from matplotlib import pyplot as plt
-
-from game import Game
-from replay_buffer import ReplayBuffer
-from rl_training import QLearningAI
-from rewards_values import Rewards
-
-from line_profiler_pycharm import profile
 import pygame
 import torch
+import json
+import os
+import numpy as np
+
+from tqdm import tqdm
+import argparse
+
+from matplotlib import pyplot as plt
+from line_profiler_pycharm import profile
+
+from game import Game
+from rl_training import QLearningAI
+from rewards_values import Rewards
 
 
 SCREEN_WIDTH = 1000
@@ -34,6 +33,7 @@ class TrainingSession:
         print(f'  Silent mode: {self.silent}')
         print(f'  Number of games: {self.n_games}')
         print(f'  Maximum episode length: {self.episode_max_length}')
+        print(f'  Replay buffer size: {self.replay_buffer_size}')
         print('\n\n')
 
         if not self.silent:
@@ -48,6 +48,7 @@ class TrainingSession:
         n_games = self.n_games
         episode_max_length = self.episode_max_length
 
+        # with open('init_states/1vs1vs1.json', 'r', encoding='utf-8') as f:
         with open('init_states/training_configs/1vs1_very_easy.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
@@ -55,18 +56,8 @@ class TrainingSession:
 
         models = None
         replay_buffer = None
-        
 
-        # model_lambda = QLearningAI(None, None).model_lambda
-        # online_model = model_lambda()
-        # reference_model = model_lambda()
-        # online_model.load_state_dict(torch.load(f'weights/online_model_game_{start_game_index}.pt'))
-        # reference_model.load_state_dict(torch.load(f'weights/reference_model_game_{start_game_index}.pt'))
-
-        # models = online_model, reference_model
-        # replay_buffer = ReplayBuffer(capacity=500)
-
-        best_reward = float('-inf')  # начальное значение - бесконечно маленькое
+        best_reward = float('-inf')
         
         for i in tqdm(range(start_game_index, n_games)):
             game = Game(config, screen, None, sound_on=False, autoplay=True, autoplay_max_turns=episode_max_length,
@@ -106,9 +97,6 @@ class TrainingSession:
                     break
 
                 for obj in current_player.game_objects:
-                    # if current_player.nation == 'Rome':
-                    #     print('hoba')
-
                     res = obj.move(game, calc_rewards_for=[rl_player])[rl_player]
                     queued_rewards.extend(res)
 

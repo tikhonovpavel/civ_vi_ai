@@ -57,8 +57,8 @@ class ReplayBuffer:
         # print(f'\nfrom ReplayBuffer.add(transition.unit=<{transition.unit}>, transition.r={transition.r})')
         # print(self)
 
-    def sample(self, batch_size: int):
-        return random.sample(self.buffer, batch_size)
+    # def sample(self, batch_size: int):
+    #     return random.sample(self.buffer, batch_size)
 
     def update_new_state_and_reward(self, turn_number, unit, new_state, new_state_legal_action, additional_reward: Dict[str, int]):
         """

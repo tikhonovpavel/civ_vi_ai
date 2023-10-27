@@ -109,8 +109,8 @@ class Game:
         self.turn_number = 1
 
         self.next_turn_button = Button('Next turn', 570, 632, 150, 70, self.next_turn)
-        self.save_state_button = Button('Save state', 800, 632, 150, 70, self.save_state)
-        self.quick_movement_marker = Marker('Quick movement', 770, 720, state=True, click_function=self.update)
+        self.save_state_button = Button('Save state', 800, 632, 170, 70, self.save_state)
+        # self.quick_movement_marker = Marker('Quick movement', 770, 720, state=True, click_function=self.update)
         self.sound_marker = Marker('Sound', 770, 720+35, state=sound_on, click_function=self.update)
         self.autoplay_marker = Marker('Autoplay', 770, 720+35*2, state=autoplay, click_function=self.update)
         self.current_turn_text = Text('Turn: {turn_number}', 550, 690, 1, 1)
@@ -118,7 +118,8 @@ class Game:
 
 
         self.ui = UI([self.next_turn_button, self.save_state_button,
-                      self.quick_movement_marker, self.sound_marker, self.autoplay_marker,
+                    #   self.quick_movement_marker,
+                        self.sound_marker, self.autoplay_marker,
                       self.current_turn_text, self.current_player_text, ])
 
         try:
