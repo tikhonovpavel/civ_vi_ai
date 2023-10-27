@@ -126,7 +126,7 @@ class QLearningAI(TrainableAI):
         return (self.online_model, self.reference_model), self.replay_buffer
 
     def update_models(self):
-        replay_buffer_cut = self.replay_buffer.buffer[min(self.game_n, len(self.replay_buffer.buffer) - 40):]
+        replay_buffer_cut = self.replay_buffer.buffer[min(int(self.game_n*1.5), len(self.replay_buffer.buffer) - 40):]
 
         sample_size = min(max(len(replay_buffer_cut) // 10, self.max_replay_buffer_sample), len(replay_buffer_cut))
         replay_buffer_sample = random.sample(replay_buffer_cut, sample_size)#self.replay_buffer.sample(sample_size)
