@@ -6,7 +6,6 @@ from itertools import dropwhile
 import numpy as np
 import pygame
 import torch
-from line_profiler_pycharm import profile
 
 import networkx as nx
 
@@ -52,7 +51,6 @@ class Diplomacy:
 class Game:
     COMBAT_MINIMUM_DAMAGE = 1
 
-    @profile
     def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=30,
                  replay_buffer_size=500, silent=False, training=True) -> None:
 
@@ -216,7 +214,6 @@ class Game:
         total_cities_n = sum(len(p.cities) for p in self.players)
         return len(player.cities) == total_cities_n
 
-    @profile
     def next_turn(self):
         if not self.is_started:
             raise Exception('Ensure you\'ve called game.start() at the initialization stage')
@@ -372,7 +369,6 @@ class Game:
 
         self.update()
 
-    # @profile
     def right_button_pressed(self, mouse_x, mouse_y):
         current_player = self.get_current_player()
 
@@ -414,7 +410,6 @@ class Game:
         obj_selected.set_allowed_shortest_path(self, r, c)
         self.update()
 
-    # @profile
     def right_button_released(self, mouse_x, mouse_y):
         current_player = self.get_current_player()
 

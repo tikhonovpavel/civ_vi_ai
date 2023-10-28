@@ -8,7 +8,6 @@ from tqdm import tqdm
 import argparse
 
 from matplotlib import pyplot as plt
-from line_profiler_pycharm import profile
 
 from game import Game
 from rl_training import QLearningAI
@@ -27,7 +26,6 @@ class TrainingSession:
         self.replay_buffer_size = replay_buffer_size
         self.rewards = []
 
-    @profile
     def start_training(self):
         print(f'Start the training with the following parameters:')
         print(f'  Silent mode: {self.silent}')

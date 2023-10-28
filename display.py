@@ -1,6 +1,5 @@
 from datetime import datetime
 
-# from line_profiler_pycharm import profile
 import pygame
 
 # Define colors
@@ -11,8 +10,6 @@ from map import terrain_types
 from nations import Nations
 from ui import ButtonStates
 # from map import TerrainTypes
-
-from line_profiler_pycharm import profile
 
 pygame.font.init()
 
@@ -29,7 +26,6 @@ class Text:
         self._fonts = dict()
         self._texts = dict()
 
-    # @profile
     def _get_font(self, font_family='Arial', size=50, bold=False, alpha=255):
         setting = (font_family, size, bold)
 
@@ -56,7 +52,6 @@ class Text:
         else:
             raise NotImplementedError()
 
-    # @profile
     def text_to_screen(self, screen, text, x, y, size=50, bold=False, color=(200, 000, 000),
                        font_family='Arial', alpha=255, align='left'):
         for i, t in enumerate(text.split('\n')):
@@ -84,7 +79,6 @@ class Display:
     def show_damage_text(self, text, r, c):
         self.damage_texts.append(self.DisappearingText(self.game, text, r, c))
 
-    @profile
     def update_all(self):
         if self.screen is None:
             return
@@ -116,7 +110,6 @@ class Display:
         self.screen.blit(shape_surf, target_rect)
         # surface.blit(shape_surf, target_rect)
 
-    # @profile
     def _update_grid(self, ):
         for r, row in enumerate(self.game.map.tiles):
             for c, tile in enumerate(row):

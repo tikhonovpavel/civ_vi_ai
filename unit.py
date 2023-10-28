@@ -4,8 +4,6 @@ import networkx as nx
 import pygame
 import random
 
-from line_profiler_pycharm import profile
-
 from rewards_values import Rewards
 from city import City
 from game_object import MilitaryObject
@@ -254,7 +252,6 @@ class Unit(MilitaryObject):
             if any(city.is_cell_inside(self.r, self.c) for city in self.player.cities):
                 self.hp = min(100, self.hp + 10)
 
-    @profile
     def move_one_cell(self, game, new_r, new_c, calc_rewards_for) -> List[Dict]:
         if not (new_r, new_c) in game.map.get_neighbours_grid_coords(self.r, self.c):
             if self.role == MilitaryObject.COMBAT or \
@@ -265,7 +262,6 @@ class Unit(MilitaryObject):
         self.path = [(self.r, self.c), (new_r, new_c)]
         return self.move(game, calc_rewards_for)
     
-    @profile
     def move(self, game, calc_rewards_for) -> Dict:
         rewards_dict = {player: [] for player in calc_rewards_for}
 
@@ -364,7 +360,6 @@ class Unit(MilitaryObject):
 
         return result
 
-    @profile
     def get_reachable_cells(self, game):
         result = []
 

@@ -1,8 +1,6 @@
-# from line_profiler_pycharm import profile
 import json
 
 import pygame
-from line_profiler_pycharm import profile
 
 from rl_training import QLearningAI
 from ui import ButtonStates
@@ -12,7 +10,6 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 900
 
 
-@profile
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))

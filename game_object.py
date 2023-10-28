@@ -4,8 +4,6 @@ import random
 import networkx as nx
 import pygame
 
-from line_profiler_pycharm import profile
-
 random.seed(42)
 
 class MilitaryObject:
@@ -119,7 +117,6 @@ class MilitaryObject:
     def set_allowed_shortest_path(self, game, to_r, to_c):
         self.path = self.get_allowed_shortest_path(game, to_r, to_c)
 
-    @profile
     def get_allowed_graph(self, game, to_r, to_c):
         current_player = game.get_current_player()
 
@@ -144,7 +141,6 @@ class MilitaryObject:
 
         return unit_allowed_hexes
 
-    @profile
     def get_allowed_shortest_path(self, game, to_r, to_c):
         unit_allowed_hexes = self.get_allowed_graph(game, to_r, to_c)
 
@@ -156,7 +152,6 @@ class MilitaryObject:
         except nx.exception.NetworkXNoPath:
             return []
 
-    @profile
     def move(self):
         raise NotImplementedError()
 

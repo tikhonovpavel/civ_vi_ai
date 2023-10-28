@@ -1,5 +1,4 @@
 import pygame
-from line_profiler_pycharm import profile
 
 from consts import UI_CITY_IMAGE_SIZE
 from game_object import MilitaryObject
@@ -101,7 +100,6 @@ class City(MilitaryObject):
 
         return enemy_obj_damage, rewards_dict
 
-    @profile
     def move(self, game, calc_rewards_for):
         rewards_dict = {player: [] for player in calc_rewards_for}
 
