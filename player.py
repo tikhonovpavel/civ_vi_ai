@@ -1,6 +1,6 @@
-from rewards_values import Rewards
+
 from city import City
-from rl_training import QLearningAI
+
 from unit import Unit
 
 
@@ -14,13 +14,11 @@ class Player:
         self.enemy_player = None
         self.enemy_unit = None
 
-        self.ai = None#ai
+        self.ai = None
 
-        self.known_map = None # TODO: туман войны
-        # self.ready_to_attack_hex = (None, None)
+        self.known_map = None  # TODO: fog of war
 
         self._reward = 0
-
         self._reward_cum = 0
 
         self.silent = silent

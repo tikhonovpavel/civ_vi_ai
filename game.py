@@ -52,11 +52,9 @@ class Diplomacy:
 class Game:
     COMBAT_MINIMUM_DAMAGE = 1
 
-
     @profile
     def __init__(self, config, screen, clock, sound_on=True, autoplay=False, autoplay_max_turns=30,
-                 replay_buffer_size=500, silent=False) -> None:
-
+                 replay_buffer_size=500, silent=False, training=True) -> None:
 
         self._is_started = False
 
@@ -115,7 +113,6 @@ class Game:
         self.autoplay_marker = Marker('Autoplay', 770, 720+35*2, state=autoplay, click_function=self.update)
         self.current_turn_text = Text('Turn: {turn_number}', 550, 690, 1, 1)
         self.current_player_text = Text("({current_player}'s turn)", 550, 730, 1, 1)
-
 
         self.ui = UI([self.next_turn_button, self.save_state_button,
                     #   self.quick_movement_marker,
@@ -340,10 +337,6 @@ class Game:
         self.display.update_all()
 
     def left_button_pressed(self, event):
-        # if self.check_winning_conditions(self.get_current_player()):
-        #     return
-
-
         mouse_x, mouse_y = event.pos
 
         self.ui.screen_click(event.pos, self.display)
@@ -357,9 +350,9 @@ class Game:
 
         player = self.get_current_player()
 
-        # если на (r, c) уже был выбран один, то надо снять маркер с него, и поставить на второго
-        # но ежели на нём не было выбрано ни одного, то поставить маркер только на первый из них
-        # при этом на всех остальных клетках тоже снять маркеры
+        # if an object was already selected at (r, c), then we need to remove the marker from it and place it on the second one
+        # but if none were selected on it, then only place a marker on the first one
+        # also, remove markers from all other cells
         rc_objects = []
         for obj in player.game_objects:
             if obj.r == r and obj.c == c:
@@ -376,19 +369,6 @@ class Game:
 
             for i, obj in enumerate(rc_objects):
                 obj.is_selected = (i == (selected_index + 1) % len(rc_objects))
-
-        # selected_count = 0
-        # selected = []
-        # for obj in player.game_objects:
-        #     selected_count += int(obj.is_selected)
-        #     if obj.is_selected:
-        #         selected.append((obj.r, obj.c))
-        #
-        # print(f'how many are selected?: {selected_count}')
-        # if selected_count > 1:
-        #     print(selected)
-        #     print()
-
 
         self.update()
 

@@ -91,12 +91,13 @@ class QLearningAI(TrainableAI):
             nn.ReLU(),
             nn.Linear(256, 7)
         )
-        self.__replay_buffer_lambda = lambda: ReplayBuffer(capacity=replay_buffer_size)
+        self.replay_buffer_size = replay_buffer_size
+        self.__replay_buffer_lambda = lambda c: ReplayBuffer(capacity=c)
 
         self.replay_buffer = None
         self.max_replay_buffer_sample = max_replay_buffer_sample
 
-    def init(self, game_n, *init_objects):
+    def init(self, game_n=1, *init_objects):
         models, replay_buffer = init_objects
 
         if models is None:
@@ -106,9 +107,12 @@ class QLearningAI(TrainableAI):
             self.reference_model = self.model_lambda()
             self.reference_model.load_state_dict(self.online_model.state_dict())
 
-            self.replay_buffer = self.__replay_buffer_lambda()
+            self.replay_buffer = self.__replay_buffer_lambda(self.replay_buffer_size)
         else:
             self.online_model, self.reference_model = models
+            
+            replay_buffer.buffer = replay_buffer.buffer[max(40, game_n):]
+            replay_buffer.capacity = max(40, self.replay_buffer_size - game_n)
             self.replay_buffer = replay_buffer
 
         for param in self.reference_model.parameters():
@@ -126,10 +130,11 @@ class QLearningAI(TrainableAI):
         return (self.online_model, self.reference_model), self.replay_buffer
 
     def update_models(self):
-        replay_buffer_cut = self.replay_buffer.buffer[min(int(self.game_n*1.5), len(self.replay_buffer.buffer) - 40):]
+        sample_size = min(max(len(self.replay_buffer.buffer) // 10, self.max_replay_buffer_sample), len(self.replay_buffer.buffer))
+        replay_buffer_sample = self.replay_buffer.sample(sample_size)
 
-        sample_size = min(max(len(replay_buffer_cut) // 10, self.max_replay_buffer_sample), len(replay_buffer_cut))
-        replay_buffer_sample = random.sample(replay_buffer_cut, sample_size)#self.replay_buffer.sample(sample_size)
+        # sample_size = min(max(len(self.replay_buffer.buffer) // 10, self.max_replay_buffer_sample), len(self.replay_buffer.buffer))
+        # replay_buffer_sample = self.replay_buffer.sample(sample_size)
 
         if not self.silent:
             print(f'Replay Buffer sample size: {len(replay_buffer_sample)}')
@@ -215,19 +220,19 @@ class QLearningAI(TrainableAI):
                 if self.check_if_legal(unit, cell, nearest_neighbours)]  + [6]  # staying where you are is always legal
 
     def select_action(self, state, legal_actions, epsilon=0.1):
-        # Прогоняем состояние через Q-сеть
+        # Pass the state through the Q-network
         q_values = self.online_model(state)
 
-        # Оставляем только Q-значения для легальных действий
+        # Retain only Q-values for legal actions
         legal_q_values = q_values[0, legal_actions]
 
-        # Если случайное число меньше epsilon, выбираем случайное действие из легальных
+        # If a random number is less than epsilon, select a random action from the legal ones
         if random.random() < epsilon:
             action = random.choice(legal_actions)
         else:
-            # Иначе выбираем легальное действие с максимальным Q-значением
-            action_idx = legal_q_values.argmax().item()  # индекс в массиве legal_q_values
-            action = legal_actions[action_idx]  # соответствующее действие из списка легальных действий
+            # Otherwise, choose the legal action with the highest Q-value
+            action_idx = legal_q_values.argmax().item()  # index in the legal_q_values array
+            action = legal_actions[action_idx]  # corresponding action from the list of legal actions
 
         return action
 
@@ -353,15 +358,13 @@ class QLearningAI(TrainableAI):
                     # just stay where we are x2
                     if not self.silent:
                         print(f'{actions_taken_count}) {unit.name} {unit.coords} -> {unit.coords} (stayed where he is).'
-                          f' (1/{len(legal_actions)} legal actions)')
+                              f' (1/{len(legal_actions)} legal actions)')
                     unit.path = []
-
-                    target_coords = unit.coords
 
                     reward = [Rewards.get_named_reward(Rewards.STAYING_WHERE_HE_IS, to_unit='self')]
 
-                    # ну что ж, выбор оставаться на месте - окончательный. 
-                    # Даже если у юнита остались ОП, мы на это забиваем, и переходим к следующему юниту
+                    # well then, the choice to stay put is final.
+                    # Even if the unit has remaining MP (movement points), we ignore it and move on to the next unit.
                     player.ai.replay_buffer.add(Transition(game_number=self.game_n,
                                                            turn_number=self.game.turn_number,
                                                            movement_number=actions_taken_count,
@@ -380,8 +383,9 @@ class QLearningAI(TrainableAI):
                     new_state_legal_actions = self.get_legal_actions(unit)
 
                     if len(new_state_legal_actions) == 0:
-                        # юнит дурак и забрёл не пойми куда. Больше он не может ходить на этом тёрне, хотя и остались очки перемещения
-                        # поэтому нам надо оставлять его с None стейтом
+                        # the unit is foolish and has wandered into an unknown area. He can no longer move this turn,
+                        # even though he still has movement points left.
+                        # therefore, we need to leave him with a None state.
                         player.ai.replay_buffer.add(Transition(game_number=self.game_n,
                                                                turn_number=self.game.turn_number,
                                                                movement_number=actions_taken_count,
@@ -421,6 +425,6 @@ class QLearningAI(TrainableAI):
 
                 actions_taken_count += 1
 
-
             if not self.silent:
-                print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. Took {actions_taken_count} steps')
+                print(f'{i + 1}/{len(player.units)} Unit {unit.category} {unit.name} done. '
+                      f'Took {actions_taken_count} steps')

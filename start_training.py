@@ -18,6 +18,7 @@ from rewards_values import Rewards
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 900
 
+
 class TrainingSession:
     def __init__(self, silent=False, n_games=500, episode_max_length=5, replay_buffer_size=500):
         self.silent = silent
@@ -28,7 +29,6 @@ class TrainingSession:
 
     @profile
     def start_training(self):
-
         print(f'Start the training with the following parameters:')
         print(f'  Silent mode: {self.silent}')
         print(f'  Number of games: {self.n_games}')
@@ -48,8 +48,7 @@ class TrainingSession:
         n_games = self.n_games
         episode_max_length = self.episode_max_length
 
-        # with open('init_states/1vs1vs1.json', 'r', encoding='utf-8') as f:
-        with open('init_states/training_configs/1vs1_very_easy.json', 'r', encoding='utf-8') as f:
+        with open('init_states/training_configs/1vs1_v2.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
         start_game_index = 1#450
@@ -100,8 +99,6 @@ class TrainingSession:
                     res = obj.move(game, calc_rewards_for=[rl_player])[rl_player]
                     queued_rewards.extend(res)
 
-                    # print(queued_rewards)
-
                     obj.gain_hps()
 
                     obj.mp = obj.mp_base
@@ -126,8 +123,6 @@ class TrainingSession:
                 game.subturn_number += 1
                 if game.subturn_number % len(game.players) == 0:
                     game.turn_number += 1
-
-                # print(rl_player.ai.replay_buffer)
 
             game_reward = rl_player.ai.replay_buffer.get_last_game_total_reward()
             print(f'At the end of the game {i}, the rewards: {game_reward}')
@@ -182,6 +177,7 @@ class TrainingSession:
     @staticmethod
     def cls():
         os.system('cls' if os.name=='nt' else 'clear')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Start a training session.")
