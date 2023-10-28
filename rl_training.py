@@ -1,7 +1,6 @@
 import random
 import torch
 import numpy as np
-from line_profiler_pycharm import profile
 from pprint import pprint
 
 import torch.optim as optim
@@ -236,7 +235,6 @@ class QLearningAI(TrainableAI):
 
         return action
 
-    @profile
     def check_if_legal(self, unit, cell, nearest_neighbours):
         player = self.player
 

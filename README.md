@@ -20,8 +20,9 @@ python3 start_training.py --silent --n_games 2000 --episode_max_length 10 --repl
 
 ## Results
 
-![https://docs.google.com/file/d/11L5uQD-AG0uVb01pmviYC3_lFDuJX0DY/preview](./preview_with_play_button.png)
-
+<a href="https://docs.google.com/file/d/11L5uQD-AG0uVb01pmviYC3_lFDuJX0DY/preview" target="_blank">
+    <img src="./preview_with_play_button.png" alt="Preview with play button">
+</a>
 
 ## Method Explanation
 
